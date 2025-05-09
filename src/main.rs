@@ -1,6 +1,5 @@
 mod app;
 mod app_eframe;
-use eframe::egui;
 
 use app::App;
 

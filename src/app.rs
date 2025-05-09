@@ -1,5 +1,3 @@
-use eframe::egui;
-
 #[derive(Default)]
 pub struct App {}
 
