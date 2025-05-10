@@ -1,6 +1,7 @@
 use std::path::{PathBuf};
 use rfd::FileDialog;
 use std::fs;
+use log::{info, error};
 
 #[derive(Default)]
 pub struct App {
@@ -30,7 +31,7 @@ impl App {
 
             // create a directory (archive)
             if let Err(e) = fs::create_dir_all(&archive_path) {
-                eprintln!("Failed to create archive directory: {}", e);
+                error!("Failed to create archive directory: {}", e);
             } else {
                 // create a README.md file inside the empty archive
                 let readme_path = archive_path.join("README.md");
@@ -41,12 +42,21 @@ impl App {
                     Err(e) => eprintln!("Failed to create README.md: {}", e),
                 }
 
-                println!("Archive created at: {}", archive_path.display());
+                info!("Archive created at: {}", archive_path.display());
 
                 self.archive_path = Some(archive_path);
             }
         } else {
-            eprintln!("No directory selected");
+            error!("No directory selected");
+        }
+    }
+
+    pub fn open_archive(&mut self) {
+        if let Some(path) = FileDialog::new().pick_folder() {
+            info!("Archive opened from: {}", path.display());
+            self.archive_path = Some(path);
+        } else {
+            error!("No directory selected");
         }
     }
 }

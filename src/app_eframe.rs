@@ -29,6 +29,7 @@ impl eframe::App for App {
 
                 if ui.button("Open Archive").clicked() {
                     info!("Open Archive clicked");
+                    self.open_archive();
                 }
             });
         });
