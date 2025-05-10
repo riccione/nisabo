@@ -6,7 +6,7 @@ use log::{info, error};
 #[derive(Default)]
 pub struct App {
     pub archive_name: String,
-    archive_path: Option<PathBuf>
+    pub archive_path: Option<PathBuf>
 }
 
 impl App {
