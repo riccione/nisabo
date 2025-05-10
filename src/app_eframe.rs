@@ -1,6 +1,6 @@
 use eframe::egui::{self, RichText, Color32, Button};
+use log::{info};
 use crate::app::App;
-use crate::APP_NAME;
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
@@ -21,14 +21,14 @@ impl eframe::App for App {
                     .fill(softer_red);
 
                 if ui.add(btn_create_archive).clicked() {
-                    println!("Create Archive clicked");
+                    info!("Create Archive clicked");
                     self.create_archive();
                 }
                 
                 ui.add_space(20.0);
 
                 if ui.button("Open Archive").clicked() {
-                    println!("Open Archive clicked");
+                    info!("Open Archive clicked");
                 }
             });
         });
