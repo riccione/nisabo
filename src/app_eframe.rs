@@ -1,6 +1,6 @@
 use eframe::egui::{self, RichText, Color32, Button};
 use log::{info, debug};
-use crate::ui::about::mod_show_about;
+use crate::ui::about::show_about;
 use crate::app::App;
 
 impl eframe::App for App {
@@ -68,7 +68,7 @@ impl eframe::App for App {
             });
 
             if self.show_about {
-                mod_show_about(ctx, &mut self.show_about);
+                show_about(ctx, &mut self.show_about);
             }
         } else {
             egui::CentralPanel::default().show(ctx, |ui| {

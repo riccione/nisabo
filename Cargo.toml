@@ -3,6 +3,12 @@ name = "nisabo"
 version = "0.1.0"
 edition = "2024"
 
+# links
+homepage = "https://github.com/riccione/nisabo"
+repository = "https://github.com/riccione/nisabo"
+documentation = "https://github.com/riccione/nisabo"
+license = "MIT"
+
 [dependencies]
 eframe = "0.31.1"
 env_logger = "0.11.8"
