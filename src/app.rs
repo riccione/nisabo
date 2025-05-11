@@ -9,7 +9,8 @@ pub struct App {
     pub archive_name: String,
     pub archive_path: Option<PathBuf>,
     pub selected_file: Option<PathBuf>,
-    pub selected_file_content: Option<String>
+    pub selected_file_content: Option<String>,
+    pub show_about: bool,
 }
 
 impl App {
@@ -18,7 +19,8 @@ impl App {
             archive_name: String::new(),
             archive_path: None,
             selected_file: None,
-            selected_file_content: None
+            selected_file_content: None,
+            show_about: false
         };
         // customize egui with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals
         Self::default()
@@ -99,5 +101,18 @@ impl App {
         } else {
             info!("Failed to read archive directory");
         }
+    }
+
+    pub fn mod_show_about(&mut self, ctx: &egui::Context, show: &mut bool) {
+        info!("Open show about mod");
+        egui::Window::new("About")
+            .collapsible(false)
+            .resizable(false)
+            .open(show)
+            .show(ctx, |ui| {
+                ui.label("nisabo");
+                ui.label("Version: 0.1.0");
+                ui.hyperlink("https://");
+            });
     }
 }

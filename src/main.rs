@@ -1,6 +1,6 @@
 mod app;
 mod app_eframe;
-
+mod ui;
 use app::App;
 
 const APP_NAME: &str = env!("CARGO_PKG_NAME");

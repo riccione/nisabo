@@ -1,5 +1,6 @@
 use eframe::egui::{self, RichText, Color32, Button};
 use log::{info, debug};
+use crate::ui::about::mod_show_about;
 use crate::app::App;
 
 impl eframe::App for App {
@@ -24,6 +25,7 @@ impl eframe::App for App {
                     ui.menu_button("Help", |ui| {
                         if ui.button("About").clicked() {
                             info!("About clicked");
+                            self.show_about = true;
                             ui.close_menu();
                         }
                     });
@@ -64,6 +66,10 @@ impl eframe::App for App {
                         ui.label(content);
                     }
             });
+
+            if self.show_about {
+                mod_show_about(ctx, &mut self.show_about);
+            }
         } else {
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.vertical_centered(|ui| {
