@@ -8,6 +8,28 @@ impl eframe::App for App {
         debug!("{:?}", archive_path);
 
         if let Some(archive_path) = archive_path {
+            egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
+                egui::menu::bar(ui, |ui| {
+                    ui.menu_button("Archive", |ui| {
+                        if ui.button("Create").clicked() {
+                            info!("Create clicked");
+                            ui.close_menu();
+                        }
+                        if ui.button("Open").clicked() {
+                            info!("Open clicked");
+                            ui.close_menu();
+                        }
+                    });
+
+                    ui.menu_button("Help", |ui| {
+                        if ui.button("About").clicked() {
+                            info!("About clicked");
+                            ui.close_menu();
+                        }
+                    });
+                });
+            });
+
             egui::SidePanel::left("left panel")
                 .resizable(true)
                 .default_width(200.0)
