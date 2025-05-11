@@ -15,9 +15,10 @@ impl eframe::App for App {
                     ui.vertical_centered(|ui| {
                         ui.heading("Files in Archive");
                         ui.separator();
-                    })
+                    });
 
-                    // TODO: show only md files
+                    // show list of *.md files only
+                    self.show_file_list(ui, &archive_path);
                 });
 
             egui::SidePanel::right("right panel")

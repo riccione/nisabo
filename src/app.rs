@@ -1,7 +1,8 @@
-use std::path::{PathBuf};
+use std::path::{Path, PathBuf};
 use rfd::FileDialog;
 use std::fs;
-use log::{info, error};
+use eframe::egui;
+use log::{info, error, debug};
 
 #[derive(Default)]
 pub struct App {
@@ -57,6 +58,32 @@ impl App {
             self.archive_path = Some(path);
         } else {
             error!("No directory selected");
+        }
+    }
+
+    pub fn show_file_list(&mut self, ui: &mut egui::Ui, archive_path: &Path) {
+        if let Ok(xs) = fs::read_dir(archive_path) {
+            let mut files: Vec<_> = xs
+                .filter_map(|entry| entry.ok())
+                .filter(|e| e.path().is_file())
+                .filter(|e| e.path()
+                        .extension()
+                        .and_then(|ext| ext.to_str()) == Some("md"))
+                .collect();
+            files.sort_by_key(|f| f.path());
+            
+            for f in files {
+                let file_path = f.path();
+                let _file_name = f.file_name().into_string().unwrap_or_default();
+                let file_stem = file_path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or_default()
+                    .to_string();
+                let _response = ui.button(&file_stem);
+            }
+        } else {
+            info!("Failed to read archive directory");
         }
     }
 }
