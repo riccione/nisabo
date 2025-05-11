@@ -7,7 +7,9 @@ use log::{info, error, debug};
 #[derive(Default)]
 pub struct App {
     pub archive_name: String,
-    pub archive_path: Option<PathBuf>
+    pub archive_path: Option<PathBuf>,
+    pub selected_file: Option<PathBuf>,
+    pub selected_file_content: Option<String>
 }
 
 impl App {
@@ -15,6 +17,8 @@ impl App {
         let mut app = Self {
             archive_name: String::new(),
             archive_path: None,
+            selected_file: None,
+            selected_file_content: None
         };
         // customize egui with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals
         Self::default()
@@ -80,7 +84,17 @@ impl App {
                     .and_then(|s| s.to_str())
                     .unwrap_or_default()
                     .to_string();
-                let _response = ui.button(&file_stem);
+                let response = ui.button(&file_stem);
+
+                if response.clicked() {
+                    info!("md file selected");
+                    self.selected_file = Some(file_path.clone());
+                    if let Ok(content) = fs::read_to_string(&file_path) {
+                        self.selected_file_content = Some(content.clone());
+                    } else {
+                        self.selected_file_content = None;
+                    }
+                }
             }
         } else {
             info!("Failed to read archive directory");

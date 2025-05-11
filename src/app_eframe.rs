@@ -25,12 +25,22 @@ impl eframe::App for App {
                 .resizable(true)
                 .default_width(200.0)
                 .show(ctx, |ui| {
-                    // TODO: show content of selected md file
+                    if let Some(content) = &self.selected_file_content {
+                        ui.heading("TODO: File Stem");
+                        ui.separator();
+                        // TODO: add a separate fn - for now just a stub
+                        ui.label(content);
+                    }
                 });
 
             egui::CentralPanel::default()
                 .show(ctx, |ui| {
-                // TODO: show content of selected md file
+                    if let Some(content) = &self.selected_file_content {
+                        ui.heading("TODO: File Stem");
+                        ui.separator();
+                        // TODO: add a separate fn - for now just a stub
+                        ui.label(content);
+                    }
             });
         } else {
             egui::CentralPanel::default().show(ctx, |ui| {
