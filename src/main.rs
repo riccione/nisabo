@@ -1,5 +1,6 @@
 mod app;
 mod app_eframe;
+mod config;
 mod ui;
 mod metadata;
 use app::App;
