@@ -2,7 +2,14 @@ use std::path::{Path, PathBuf};
 use rfd::FileDialog;
 use std::fs;
 use eframe::egui;
-use log::{info, error, debug};
+use std::io::Write;
+use serde::{Deserialize, Serialize};
+use log::{info, error};
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct AppConfig {
+    pub last_archive_path: Option<PathBuf>,
+}
 
 #[derive(Default)]
 pub struct App {
@@ -22,8 +29,51 @@ impl App {
             selected_file_content: None,
             show_about: false
         };
-        // customize egui with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals
-        Self::default()
+        
+        let config = Self::load_config();
+        if let Some(x) = config.last_archive_path {
+            if x.exists() {
+                app.archive_path = Some(x);
+            }
+        }
+
+        app
+    }
+    
+    fn get_config_path() -> Option<PathBuf> {
+        dirs::config_dir()
+            .map(|dir| dir.join("nisabo/config.toml"))
+    }
+
+    fn load_config() -> AppConfig {
+        info!("loading config");
+        if let Some(config_path) = Self::get_config_path() {
+            info!("{:?}", config_path);
+            if let Ok(data) = fs::read_to_string(config_path) {
+                if let Ok(config) = toml::from_str::<AppConfig>(&data) {
+                    return config;
+                }
+            }
+        }
+        AppConfig::default()
+    }
+
+    fn save_config(&self) {
+        info!("saving config");
+        if let Some(config_path) = Self::get_config_path() {
+            if let Some(parent) = config_path.parent() {
+                let _ = fs::create_dir_all(parent);
+            }
+
+            let config = AppConfig {
+                last_archive_path: self.archive_path.clone(),
+            };
+
+            if let Ok(toml_str) = toml::to_string_pretty(&config) {
+                let _ = fs::File::create(&config_path)
+                    .and_then(|mut f| f.write_all(toml_str.as_bytes()));
+            }
+        }
     }
 
     pub fn create_archive(&mut self) {
@@ -52,6 +102,7 @@ impl App {
                 info!("Archive created at: {}", archive_path.display());
 
                 self.archive_path = Some(archive_path);
+                self.save_config();
             }
         } else {
             error!("No directory selected");
@@ -62,6 +113,7 @@ impl App {
         if let Some(path) = FileDialog::new().pick_folder() {
             info!("Archive opened from: {}", path.display());
             self.archive_path = Some(path);
+            self.save_config();
         } else {
             error!("No directory selected");
         }
