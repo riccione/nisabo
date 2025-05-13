@@ -121,16 +121,4 @@ impl App {
         }
     }
 
-    pub fn mod_show_about(&mut self, ctx: &egui::Context, show: &mut bool) {
-        info!("Open show about mod");
-        egui::Window::new("About")
-            .collapsible(false)
-            .resizable(false)
-            .open(show)
-            .show(ctx, |ui| {
-                ui.label("nisabo");
-                ui.label("Version: 0.1.0");
-                ui.hyperlink("https://");
-            });
-    }
 }
