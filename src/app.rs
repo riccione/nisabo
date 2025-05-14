@@ -6,6 +6,8 @@ use std::io::Write;
 use serde::{Deserialize, Serialize};
 use log::{info, error};
 use crate::config::AppConfig;
+use rusqlite::{Connection, Result};
+use chrono::{NaiveDateTime};
 
 #[derive(Default)]
 pub struct App {
@@ -18,6 +20,15 @@ pub struct App {
     pub rename_input: String,
     pub show_rename: bool,
     pub rename_error: Option<String>,
+}
+
+#[derive(Default)]
+struct Archive {
+    id: i32,
+    name: String,
+    content: String,
+    created_at: NaiveDateTime,
+    updated_at: NaiveDateTime,
 }
 
 impl App {
@@ -44,7 +55,34 @@ impl App {
         app
     }
     
-    pub fn create_archive(&mut self) {
+    pub fn create_archive(&mut self) -> Result<()> {
+        // create a sqlite db
+        let conn = Connection::open("archive.db")?;
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS archive (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                name            TEXT NOT NULL,
+                content         TEXT,
+                created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+                )",
+            (),
+        )?;
+        
+        conn.execute(
+           "INSERT INTO archive (
+                name, content, created_at, updated_at
+            ) VALUES (?1, ?2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ",
+            (
+                "README",
+                "# Welcome to nisabo",
+            ),
+        )?;
+
+        Ok(())
+
+        /*
         if let Some(path) = FileDialog::new().pick_folder() {
             let archive_name = if self.archive_name.is_empty() {
                 "MyArchive"
@@ -78,6 +116,7 @@ impl App {
         } else {
             error!("No directory selected");
         }
+        */
     }
 
     pub fn open_archive(&mut self) {
