@@ -8,6 +8,10 @@ impl eframe::App for App {
         let archive_path = self.archive_path.clone();
         debug!("{:?}", archive_path);
 
+        if self.show_rename {
+            self.show_rename(ctx);
+        }
+
         if let Some(archive_path) = archive_path {
             egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
                 egui::menu::bar(ui, |ui| {

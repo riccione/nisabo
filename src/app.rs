@@ -14,6 +14,10 @@ pub struct App {
     pub selected_file: Option<PathBuf>,
     pub selected_file_content: Option<String>,
     pub show_about: bool,
+    pub rename_target: Option<PathBuf>,
+    pub rename_input: String,
+    pub show_rename: bool,
+    pub rename_error: Option<String>,
 }
 
 impl App {
@@ -23,7 +27,11 @@ impl App {
             archive_path: None,
             selected_file: None,
             selected_file_content: None,
-            show_about: false
+            show_about: false,
+            rename_target: None,
+            rename_input: String::new(),
+            show_rename: false,
+            rename_error: None,
         };
         
         let config = AppConfig::load_config();
@@ -115,10 +123,91 @@ impl App {
                         self.selected_file_content = None;
                     }
                 }
+
+                // right btn
+                response.context_menu(|ui| {
+                    if ui.button("Rename").clicked() {
+                        info!("Rename clicked");
+                        self.rename_target = Some(file_path.clone());
+                        self.rename_input = file_stem.clone();
+                        // TODO: show popup with a file stem
+                        self.show_rename = true;
+                        ui.close_menu();
+                    }
+
+                    if ui.button("Delete").clicked() {
+                        info!("Delete clicked");
+                        // TODO: handle delete
+                    }
+                });
             }
         } else {
             info!("Failed to read archive directory");
         }
     }
 
+    pub fn show_rename(&mut self, ctx: &egui::Context) {
+        if self.show_rename {
+            // tmp var
+            let mut x = self.show_rename;
+            egui::Window::new("Rename File")
+                .open(&mut x)
+                .resizable(false)
+                .show(ctx, |ui| {
+                    ui.label("Enter new name: ");
+                    if let Some(e) = &self.rename_error {
+                        ui.label(egui::RichText::new(e).color(egui::Color32::RED));
+                    }
+
+                    ui.horizontal(|ui| {
+                        ui.text_edit_singleline(&mut self.rename_input);
+
+                        if ui.button("Rename").clicked() {
+                            if let Some(rename_target) = &self.rename_target {
+                                let path = rename_target.clone();
+
+                                let new_name = format!(
+                                    "{}.{}",
+                                    self.rename_input,
+                                    path.extension()
+                                        .unwrap_or_default()
+                                        .to_string_lossy()
+                                );
+
+                                let new_path = path.with_file_name(new_name);
+
+                                // 
+                                if new_path.exists() {
+                                    error!("The file already exists");
+                                    self.rename_error = Some("The file with that name already exists".to_string());
+                                    return; // keep popup open
+                                } else {
+                                    if let Err(e) = fs::rename(&path, &new_path) {
+                                        error!("Error renaming file: {e}");
+                                        self.rename_error = Some(format!("Failed to rename file: {e}"));
+                                        return;
+                                    } else {
+                                        info!("File renamed to: {}", new_path.display());
+                                        self.selected_file = Some(new_path.clone());
+                                    }
+                                }
+                            }
+
+                            self.show_rename = false;
+                            self.rename_target = None;
+                            self.rename_input.clear();
+                            self.rename_error = None;
+                        }
+                     
+                        if ui.button("Cancel").clicked() {
+                            info!("Cancel clicked");
+                            self.show_rename = false;
+                            self.rename_target = None;
+                            self.rename_input.clear();
+                            self.rename_error = None;
+                        }
+                    });
+                });
+        }
+    }
 }
