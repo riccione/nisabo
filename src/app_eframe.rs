@@ -93,7 +93,7 @@ impl eframe::App for App {
 
                     if ui.add(btn_create_archive).clicked() {
                         info!("Create Archive clicked");
-                        self.create_archive();
+                        self.create_db();
                     }
                     
                     ui.add_space(20.0);

@@ -54,69 +54,22 @@ impl App {
 
         app
     }
-    
-    pub fn create_archive(&mut self) -> Result<()> {
-        // create a sqlite db
-        let conn = Connection::open("archive.db")?;
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS archive (
-                id              INTEGER PRIMARY KEY AUTOINCREMENT,
-                name            TEXT NOT NULL,
-                content         TEXT,
-                created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP
-                )",
-            (),
-        )?;
-        
-        conn.execute(
-           "INSERT INTO archive (
-                name, content, created_at, updated_at
-            ) VALUES (?1, ?2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            ",
-            (
-                "README",
-                "# Welcome to nisabo",
-            ),
-        )?;
 
-        Ok(())
-
-        /*
+    pub fn create_db(&mut self) {
         if let Some(path) = FileDialog::new().pick_folder() {
-            let archive_name = if self.archive_name.is_empty() {
-                "MyArchive"
-            } else {
-                &self.archive_name
-            };
-                
-            let archive_path = path.join(archive_name);
-
-            // create a directory (archive)
-            if let Err(e) = fs::create_dir_all(&archive_path) {
-                error!("Failed to create archive directory: {}", e);
-            } else {
-                // create a README.md file inside the empty archive
-                let readme_path = archive_path.join("README.md");
-                let default_content = "# Welcome to your Archive\n";
-
-                match fs::write(&readme_path, default_content) {
-                    Ok(_) => println!("README.md created at: {}", readme_path.display()),
-                    Err(e) => eprintln!("Failed to create README.md: {}", e),
-                }
-
-                info!("Archive created at: {}", archive_path.display());
-
-                self.archive_path = Some(archive_path);
-                let config = AppConfig {
-                    last_archive_path: self.archive_path.clone(),
-                };
-                config.save_config();
-            }
+        let archive_name = if self.archive_name.is_empty() {
+            "archive"
         } else {
-            error!("No directory selected");
+            &self.archive_name
+        };
+
+        let archive_path = path.join(format!("{}.db", archive_name));
+
+        match crate::db::crud::create_db(&archive_path) {
+            Ok(_) => info!("db file created"),
+            Err(e) => error!("Failed to create a db: {}", e),
         }
-        */
+        }
     }
 
     pub fn open_archive(&mut self) {

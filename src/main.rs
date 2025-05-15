@@ -2,6 +2,7 @@ mod app;
 mod app_eframe;
 mod config;
 mod ui;
+mod db;
 mod metadata;
 use app::App;
 
