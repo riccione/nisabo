@@ -96,6 +96,11 @@ impl eframe::App for App {
                         self.create_db();
                     }
                     
+                    info!("{:?}", self.db_error);
+                    if let Some(ref err) = self.db_error {
+                        ui.colored_label(egui::Color32::RED, format!("{}", err));
+                    }
+
                     ui.add_space(20.0);
 
                     if ui.button("Open Archive").clicked() {

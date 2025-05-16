@@ -20,6 +20,7 @@ pub struct App {
     pub rename_input: String,
     pub show_rename: bool,
     pub rename_error: Option<String>,
+    pub db_error: Option<String>,
 }
 
 #[derive(Default)]
@@ -32,8 +33,8 @@ struct Archive {
 }
 
 impl App {
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let mut app = Self {
+    pub fn default_values() -> Self {
+        Self {
             archive_name: String::new(),
             archive_path: None,
             selected_file: None,
@@ -43,8 +44,13 @@ impl App {
             rename_input: String::new(),
             show_rename: false,
             rename_error: None,
-        };
-        
+            db_error: None,
+        }
+    }
+
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let mut app = Self::default_values();
+
         let config = AppConfig::load_config();
         if let Some(x) = config.last_archive_path {
             if x.exists() {
@@ -57,18 +63,19 @@ impl App {
 
     pub fn create_db(&mut self) {
         if let Some(path) = FileDialog::new().pick_folder() {
-        let archive_name = if self.archive_name.is_empty() {
-            "archive"
-        } else {
-            &self.archive_name
-        };
+            let archive_name = if self.archive_name.is_empty() {
+                "archive"
+            } else {
+                &self.archive_name
+            };
 
-        let archive_path = path.join(format!("{}.db", archive_name));
+            let archive_path = path.join(format!("{}.db", archive_name));
 
-        match crate::db::crud::create_db(&archive_path) {
-            Ok(_) => info!("db file created"),
-            Err(e) => error!("Failed to create a db: {}", e),
-        }
+            self.db_error = match crate::db::crud::create_db(&archive_path) {
+                Ok(_) => None,
+                Err(e) => Some(format!("Failed to create DB: {e}")),
+            };
+            info!("DB ERR: {:?}", self.db_error);
         }
     }
 

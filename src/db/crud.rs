@@ -2,11 +2,15 @@ use std::path::{Path, PathBuf};
 use rusqlite::{Connection, Result};
 use chrono::{NaiveDateTime};
 use log::{info, error};
+use std::fs;
 use crate::app::App;
 
-pub fn create_db(path: &PathBuf) -> Result<()> {
+pub fn create_db(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     // create a sqlite db
-    println!("{:?}", path);
+    if path.try_exists()? {
+        return Err(format!("DB already exists at {:?}", path).into());
+    }
+
     let conn = Connection::open(path)?;
     conn.execute(
         "CREATE TABLE IF NOT EXISTS archive (
