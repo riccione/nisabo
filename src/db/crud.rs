@@ -1,16 +1,14 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use rusqlite::{Connection, Result};
-use chrono::{NaiveDateTime};
-use log::{info, error};
-use std::fs;
 use crate::app::App;
+use crate::config::AppConfig;
 
-pub fn create_db(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+pub fn create_db(app: &mut App, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     // create a sqlite db
     if path.try_exists()? {
         return Err(format!("DB already exists at {:?}", path).into());
     }
-
+    
     let conn = Connection::open(path)?;
     conn.execute(
         "CREATE TABLE IF NOT EXISTS archive (
@@ -33,6 +31,13 @@ pub fn create_db(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
             "# Welcome to nisabo",
         ),
     )?;
+
+    let config = AppConfig {
+        last_archive_path: Some(path.clone()),
+    };
+    config.save_config();
+
+    app.archive_path = Some(path.clone());
 
     Ok(())
 }

@@ -2,12 +2,8 @@ use std::path::{Path, PathBuf};
 use rfd::FileDialog;
 use std::fs;
 use eframe::egui;
-use std::io::Write;
-use serde::{Deserialize, Serialize};
 use log::{info, error};
 use crate::config::AppConfig;
-use rusqlite::{Connection, Result};
-use chrono::{NaiveDateTime};
 
 #[derive(Default)]
 pub struct App {
@@ -21,15 +17,6 @@ pub struct App {
     pub show_rename: bool,
     pub rename_error: Option<String>,
     pub db_error: Option<String>,
-}
-
-#[derive(Default)]
-struct Archive {
-    id: i32,
-    name: String,
-    content: String,
-    created_at: NaiveDateTime,
-    updated_at: NaiveDateTime,
 }
 
 impl App {
@@ -71,11 +58,13 @@ impl App {
 
             let archive_path = path.join(format!("{}.db", archive_name));
 
-            self.db_error = match crate::db::crud::create_db(&archive_path) {
+            self.db_error = match crate::db::crud::create_db(self, &archive_path) {
                 Ok(_) => None,
                 Err(e) => Some(format!("Failed to create DB: {e}")),
             };
             info!("DB ERR: {:?}", self.db_error);
+        } else {
+            error!("No directory selected");
         }
     }
 

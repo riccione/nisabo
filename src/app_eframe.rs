@@ -1,12 +1,12 @@
 use eframe::egui::{self, RichText, Color32, Button};
-use log::{info, debug};
+use log::{info};
 use crate::ui::about::show_about;
 use crate::app::App;
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         let archive_path = self.archive_path.clone();
-        debug!("{:?}", archive_path);
+        info!("{:?}", archive_path);
 
         if self.show_rename {
             self.show_rename(ctx);
@@ -46,7 +46,7 @@ impl eframe::App for App {
                     });
 
                     // show list of *.md files only
-                    self.show_file_list(ui, &archive_path);
+                    // self.show_file_list(ui, &archive_path);
                 });
 
             egui::SidePanel::right("right panel")

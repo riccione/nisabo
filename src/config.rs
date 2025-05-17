@@ -1,8 +1,8 @@
 use std::fs;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
-use log::{info, error};
+use log::{info};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct AppConfig {
@@ -31,6 +31,7 @@ impl AppConfig {
     pub fn save_config(&self) {
         info!("saving config");
         if let Some(config_path) = Self::get_config_path() {
+            info!("{:?}", config_path);
             if let Some(parent) = config_path.parent() {
                 let _ = fs::create_dir_all(parent);
             }
