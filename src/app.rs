@@ -98,15 +98,19 @@ impl App {
     }
     
     pub fn open_archive(&mut self) {
-        if let Some(path) = FileDialog::new().pick_folder() {
+        if let Some(path) = FileDialog::new().pick_file() {
             info!("Archive opened from: {}", path.display());
-            self.archive_path = Some(path);
+            self.archive_path = Some(path.clone());
             let config = AppConfig {
                 last_archive_path: self.archive_path.clone(),
             };
             config.save_config();
+            
+            let x = path.clone();
+            self.db_path = x.to_string_lossy().into_owned();
+            self.state_start = true;
         } else {
-            error!("No directory selected");
+            error!("No db file selected");
         }
     }
     
