@@ -38,7 +38,7 @@ impl Database {
     }
 
     pub fn get_notes(&self) -> Result<Vec<(i32, String)>> {
-        let mut x = self.conn.prepare("SELECT id, name FROM note")?;
+        let mut x = self.conn.prepare("SELECT id, name FROM note WHERE deleted_at is NULL")?;
         let rows = x.query_map([], |row| {
             Ok((
                 row.get(0)?, 
@@ -55,6 +55,19 @@ impl Database {
             "UPDATE note SET name = ?1 WHERE id = ?2",
             (new_name, id),
         )
+    }
+    
+    pub fn get_trash(&self) -> Result<Vec<(i32, String)>> {
+        let mut x = self.conn.prepare("SELECT id, name FROM note WHERE deleted_at IS NOT NULL")?;
+        let rows = x.query_map([], |row| {
+            Ok((
+                row.get(0)?, 
+                row.get(1)?
+            ))
+        })?;
+
+        let xz = rows.collect::<Result<Vec<_>,_>>()?;
+        Ok(xz)
     }
     
     pub fn delete_note_soft(&self, id: i32) -> Result<usize> {

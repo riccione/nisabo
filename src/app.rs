@@ -27,6 +27,8 @@ pub struct App {
     pub db_error: Option<String>,
     pub load_rows: bool, // trigger loading
     pub names: Vec<(i32, String)>,
+    pub notes_deleted: Vec<(i32, String)>,
+    pub state_trash_load: bool, // trigger loading
     pub selected_index: Option<i32>,
     pub state_start: bool,
     pub selected_tab: SidebarTab,
@@ -54,6 +56,8 @@ impl App {
             db_error: None,
             load_rows: false,
             names: Vec::<(i32, String)>::new(),
+            notes_deleted: Vec::<(i32, String)>::new(),
+            state_trash_load: false,
             selected_index: None,
             state_start: false,
             selected_tab: SidebarTab::Notes,
@@ -144,13 +148,68 @@ impl App {
             }
         }
 
-        ui.heading("Notes list");
-
         if self.names.is_empty() {
             ui.label("No notes found");
         } else {
             egui::ScrollArea::vertical().show(ui, |ui| {
-                for (id, name) in &self.names {
+                // for borrow issues
+                let xs: Vec<(i32, String)> = self.names.iter()
+                    .map(|(id, name)| (*id, name.clone()))
+                    .collect();
+                for (id, name) in xs {
+                    let selected = Some(&id) == self.selected_index.as_ref();
+
+                    let response = ui.add(egui::SelectableLabel::new(selected, &name));
+
+                    if response.clicked() {
+                        self.selected_index = Some(id);
+                        println!("note clicked {:?}", self.selected_index);
+                    }
+
+                    // right btn
+                    response.context_menu(|ui| {
+                        if ui.button("Rename").clicked() {
+                            info!("Rename clicked");
+                            self.rename_input = name.to_string();
+                            self.selected_index = Some(id);
+                            // show popup with name as input
+                            self.state_rename = true;
+                            ui.close_menu();
+                        }
+
+                        if ui.button("Delete").clicked() {
+                            info!("Delete clicked");
+                            // TODO: handle delete
+                            let _ = self.try_delete_note(id);
+                        }
+                    });
+                }
+            });
+        }
+        Ok(()) 
+    }
+    
+    pub fn show_trash(&mut self, ui: &mut egui::Ui) 
+        -> Result<(), Box<dyn Error>> {
+        if !self.state_trash_load {
+            let db = crate::db::database::Database::new(&self.db_path)?;
+            match db.get_trash() {
+                Ok(x) => {
+                    self.notes_deleted = x;
+                    self.state_trash_load = true; // TODO: move it to state
+                }
+                Err(e) => {
+                    error!("Error loading notes from table note: {e}");
+                    self.notes_deleted.clear();
+                }
+            }
+        }
+
+        if self.notes_deleted.is_empty() {
+            ui.label("Trash is empty");
+        } else {
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                for (id, name) in &self.notes_deleted {
                     let selected = Some(id) == self.selected_index.as_ref();
 
                     let response = ui.add(egui::SelectableLabel::new(selected, name));
@@ -162,18 +221,14 @@ impl App {
 
                     // right btn
                     response.context_menu(|ui| {
-                        if ui.button("Rename").clicked() {
+                        if ui.button("Restore").clicked() {
                             info!("Rename clicked");
-                            self.rename_input = name.to_string();
-                            self.selected_index = Some(*id);
-                            // show popup with name as input
-                            self.state_rename = true;
-                            ui.close_menu();
+                            // TODO: implement
                         }
 
-                        if ui.button("Delete").clicked() {
+                        if ui.button("Permanently Delete").clicked() {
                             info!("Delete clicked");
-                            // TODO: handle delete
+                            // TODO: implement
                         }
                     });
                 }
@@ -181,6 +236,7 @@ impl App {
         }
         Ok(()) 
     }
+
 
     pub fn show_rename(&mut self, ctx: &egui::Context) { 
         if self.state_rename {
@@ -235,6 +291,16 @@ impl App {
         self.rename_target = None;
         self.rename_input.clear();
         self.rename_error = None;
+        // refresh ui
+        self.load_rows = false;
+        Ok(())
+    }
+    
+    fn try_delete_note(&mut self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+        println!("id: {:?}", id);
+        let db = crate::db::database::Database::new(&self.db_path)?;
+        let _ = db.delete_note_soft(id);
+
         // refresh ui
         self.load_rows = false;
         Ok(())

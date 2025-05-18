@@ -50,24 +50,18 @@ impl eframe::App for App {
                             }
                         });
 
-
-                        //ui.heading("Files in Archive");
                         ui.separator();
                     });
 
                     // Tab content
                     match self.selected_tab {
                         SidebarTab::Notes => {
-                            let _ = self.show_db_ls(ui); // Your existing method for listing notes
+                            let _ = self.show_db_ls(ui);
                         },
                         SidebarTab::Trash => {
-                            //let _ = self.show_trash(ui); // You should implement this method to show soft-deleted notes
-                            //let _ = self.show_db_ls(ui); // Your existing method for listing notes
-                            println!("Trash tab");
+                            let _ = self.show_trash(ui);
                         }
                     }
-
-                    //let _ = self.show_db_ls(ui);
                 });
 
             egui::SidePanel::right("right panel")
