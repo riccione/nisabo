@@ -12,7 +12,7 @@ impl Database {
 
     pub fn init_tables(&self) -> Result<()> {
         self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS archive (
+            "CREATE TABLE IF NOT EXISTS note (
                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
                 name            TEXT NOT NULL,
                 content         TEXT,
@@ -23,7 +23,7 @@ impl Database {
         )?;
         
         self.conn.execute(
-           "INSERT INTO archive (
+           "INSERT INTO note (
                 name, content, created_at, updated_at
             ) VALUES (?1, ?2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             ",
@@ -33,5 +33,18 @@ impl Database {
             ),
         )?;
         Ok(())
+    }
+
+    pub fn get_notes(&self) -> Result<Vec<(i32, String)>> {
+        let mut x = self.conn.prepare("SELECT id, name FROM note")?;
+        let rows = x.query_map([], |row| {
+            Ok((
+                row.get(0)?, 
+                row.get(1)?
+            ))
+        })?;
+
+        let names = rows.collect::<Result<Vec<_>,_>>()?;
+        Ok(names)
     }
 }

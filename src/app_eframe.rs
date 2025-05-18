@@ -4,15 +4,14 @@ use crate::ui::about::show_about;
 use crate::app::App;
 
 impl eframe::App for App {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        let archive_path = self.archive_path.clone();
-        info!("{:?}", archive_path);
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let _archive_path = self.archive_path.clone();
 
         if self.show_rename {
             self.show_rename(ctx);
         }
 
-        if let Some(archive_path) = archive_path {
+        if self.state_start {
             egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
                 egui::menu::bar(ui, |ui| {
                     ui.menu_button("Archive", |ui| {
@@ -41,13 +40,11 @@ impl eframe::App for App {
                 .default_width(200.0)
                 .show(ctx, |ui| {
                     ui.vertical_centered(|ui| {
-                        ui.heading("Files in Archive");
+                        //ui.heading("Files in Archive");
                         ui.separator();
                     });
 
-                    // show list of *.md files only
-                    // self.show_file_list(ui, &archive_path);
-                    self.show_db_ls(ui, &archive_path);
+                    let _ = self.show_db_ls(ui);
                 });
 
             egui::SidePanel::right("right panel")

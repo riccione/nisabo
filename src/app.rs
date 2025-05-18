@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 use rfd::FileDialog;
 use std::fs;
 use eframe::egui;
@@ -10,6 +10,7 @@ use std::error::Error;
 pub struct App {
     pub archive_name: String,
     pub archive_path: Option<PathBuf>,
+    pub db_path: String,
     pub selected_file: Option<PathBuf>,
     pub selected_file_content: Option<String>,
     pub show_about: bool,
@@ -19,7 +20,9 @@ pub struct App {
     pub rename_error: Option<String>,
     pub db_error: Option<String>,
     pub load_rows: bool, // trigger loading
-    pub names: Vec<String>,
+    pub names: Vec<(i32, String)>,
+    pub selected_index: Option<i32>,
+    pub state_start: bool,
 }
 
 impl App {
@@ -27,6 +30,7 @@ impl App {
         Self {
             archive_name: String::new(),
             archive_path: None,
+            db_path: String::new(),
             selected_file: None,
             selected_file_content: None,
             show_about: false,
@@ -36,17 +40,21 @@ impl App {
             rename_error: None,
             db_error: None,
             load_rows: false,
-            names: Vec::new(),
+            names: Vec::<(i32, String)>::new(),
+            selected_index: None,
+            state_start: false,
         }
     }
 
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         let mut app = Self::default_values();
-
+        
         let config = AppConfig::load_config();
         if let Some(x) = config.last_archive_path {
             if x.exists() {
-                app.archive_path = Some(x);
+                app.archive_path = Some(x.clone());
+                app.db_path = x.to_string_lossy().into_owned();
+                app.state_start = true;
             }
         }
 
@@ -76,7 +84,9 @@ impl App {
                     };
                     config.save_config();
 
-                    self.archive_path = Some(archive_path);
+                    self.archive_path = Some(archive_path.clone());
+                    self.state_start = true;
+                    self.db_path = archive_path.to_string_lossy().into_owned();
                 } else {
                     self.db_error = Some("Path contains invalid UTF-8".to_string());
                 }
@@ -86,7 +96,7 @@ impl App {
         }
         Ok(())
     }
-
+    
     pub fn open_archive(&mut self) {
         if let Some(path) = FileDialog::new().pick_folder() {
             info!("Archive opened from: {}", path.display());
@@ -99,13 +109,15 @@ impl App {
             error!("No directory selected");
         }
     }
-
-    pub fn show_db_ls(&mut self, ui: &mut egui::Ui, archive_path: &Path) {
+    
+    pub fn show_db_ls(&mut self, ui: &mut egui::Ui) 
+        -> Result<(), Box<dyn Error>> {
     if !self.load_rows {
-        match crate::db::crud::ls(archive_path) {
+        let db = crate::db::database::Database::new(&self.db_path)?;
+        match db.get_notes() {
             Ok(names) => {
                 self.names = names;
-                self.load_rows = true;
+                self.load_rows = true; // TODO: move it to state
             }
             Err(e) => {
                 error!("Error loading names from table archive: {e}");
@@ -114,75 +126,23 @@ impl App {
         }
     }
 
-    ui.heading("Notes list");
+        ui.heading("Notes list");
 
-    if self.names.is_empty() {
-        ui.label("No notes found");
-    } else {
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            for x in &self.names {
-                let response = ui.label(x);
-
-                if response.clicked() {
-                    println!("note clicked");
-                }
-            }
-        });
-    }
-    
-    }
-
-    pub fn show_file_list(&mut self, ui: &mut egui::Ui, archive_path: &Path) {
-        if let Ok(xs) = fs::read_dir(archive_path) {
-            let mut files: Vec<_> = xs
-                .filter_map(|entry| entry.ok())
-                .filter(|e| e.path().is_file())
-                .filter(|e| e.path()
-                        .extension()
-                        .and_then(|ext| ext.to_str()) == Some("md"))
-                .collect();
-            files.sort_by_key(|f| f.path());
-            
-            for f in files {
-                let file_path = f.path();
-                let _file_name = f.file_name().into_string().unwrap_or_default();
-                let file_stem = file_path
-                    .file_stem()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or_default()
-                    .to_string();
-                let response = ui.button(&file_stem);
-
-                if response.clicked() {
-                    info!("md file selected");
-                    self.selected_file = Some(file_path.clone());
-                    if let Ok(content) = fs::read_to_string(&file_path) {
-                        self.selected_file_content = Some(content.clone());
-                    } else {
-                        self.selected_file_content = None;
-                    }
-                }
-
-                // right btn
-                response.context_menu(|ui| {
-                    if ui.button("Rename").clicked() {
-                        info!("Rename clicked");
-                        self.rename_target = Some(file_path.clone());
-                        self.rename_input = file_stem.clone();
-                        // TODO: show popup with a file stem
-                        self.show_rename = true;
-                        ui.close_menu();
-                    }
-
-                    if ui.button("Delete").clicked() {
-                        info!("Delete clicked");
-                        // TODO: handle delete
-                    }
-                });
-            }
+        if self.names.is_empty() {
+            ui.label("No notes found");
         } else {
-            info!("Failed to read archive directory");
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                for (id, name) in &self.names {
+                    let selected = Some(id) == self.selected_index.as_ref();
+                    
+                    if ui.add(egui::SelectableLabel::new(selected, name)).clicked() {
+                        self.selected_index = Some(*id);
+                        println!("note clicked {:?}", self.selected_index);
+                    }
+                }
+            });
         }
+        Ok(()) 
     }
 
     pub fn show_rename(&mut self, ctx: &egui::Context) {
