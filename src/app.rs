@@ -16,7 +16,7 @@ pub struct App {
     pub show_about: bool,
     pub rename_target: Option<PathBuf>,
     pub rename_input: String,
-    pub show_rename: bool,
+    pub state_rename: bool,
     pub rename_error: Option<String>,
     pub db_error: Option<String>,
     pub load_rows: bool, // trigger loading
@@ -36,7 +36,7 @@ impl App {
             show_about: false,
             rename_target: None,
             rename_input: String::new(),
-            show_rename: false,
+            state_rename: false,
             rename_error: None,
             db_error: None,
             load_rows: false,
@@ -116,19 +116,19 @@ impl App {
     
     pub fn show_db_ls(&mut self, ui: &mut egui::Ui) 
         -> Result<(), Box<dyn Error>> {
-    if !self.load_rows {
-        let db = crate::db::database::Database::new(&self.db_path)?;
-        match db.get_notes() {
-            Ok(names) => {
-                self.names = names;
-                self.load_rows = true; // TODO: move it to state
-            }
-            Err(e) => {
-                error!("Error loading names from table archive: {e}");
-                self.names.clear();
+        if !self.load_rows {
+            let db = crate::db::database::Database::new(&self.db_path)?;
+            match db.get_notes() {
+                Ok(names) => {
+                    self.names = names;
+                    self.load_rows = true; // TODO: move it to state
+                }
+                Err(e) => {
+                    error!("Error loading names from table archive: {e}");
+                    self.names.clear();
+                }
             }
         }
-    }
 
         ui.heading("Notes list");
 
@@ -138,23 +138,42 @@ impl App {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for (id, name) in &self.names {
                     let selected = Some(id) == self.selected_index.as_ref();
-                    
-                    if ui.add(egui::SelectableLabel::new(selected, name)).clicked() {
+
+                    let response = ui.add(egui::SelectableLabel::new(selected, name));
+
+                    if response.clicked() {
                         self.selected_index = Some(*id);
                         println!("note clicked {:?}", self.selected_index);
                     }
+
+                    // right btn
+                    response.context_menu(|ui| {
+                        if ui.button("Rename").clicked() {
+                            info!("Rename clicked");
+                            self.rename_input = name.to_string();
+                            self.selected_index = Some(*id);
+                            // show popup with name as input
+                            self.state_rename = true;
+                            ui.close_menu();
+                        }
+
+                        if ui.button("Delete").clicked() {
+                            info!("Delete clicked");
+                            // TODO: handle delete
+                        }
+                    });
                 }
             });
         }
         Ok(()) 
     }
 
-    pub fn show_rename(&mut self, ctx: &egui::Context) {
-        if self.show_rename {
+    pub fn show_rename(&mut self, ctx: &egui::Context) { 
+        if self.state_rename {
             // tmp var
-            let mut x = self.show_rename;
+            let mut open = self.state_rename;
             egui::Window::new("Rename File")
-                .open(&mut x)
+                .open(&mut open)
                 .resizable(false)
                 .show(ctx, |ui| {
                     ui.label("Enter new name: ");
@@ -166,51 +185,35 @@ impl App {
                         ui.text_edit_singleline(&mut self.rename_input);
 
                         if ui.button("Rename").clicked() {
-                            if let Some(rename_target) = &self.rename_target {
-                                let path = rename_target.clone();
-
-                                let new_name = format!(
-                                    "{}.{}",
-                                    self.rename_input,
-                                    path.extension()
-                                        .unwrap_or_default()
-                                        .to_string_lossy()
-                                );
-
-                                let new_path = path.with_file_name(new_name);
-
-                                // 
-                                if new_path.exists() {
-                                    error!("The file already exists");
-                                    self.rename_error = Some("The file with that name already exists".to_string());
-                                    return; // keep popup open
-                                } else {
-                                    if let Err(e) = fs::rename(&path, &new_path) {
-                                        error!("Error renaming file: {e}");
-                                        self.rename_error = Some(format!("Failed to rename file: {e}"));
-                                        return;
-                                    } else {
-                                        info!("File renamed to: {}", new_path.display());
-                                        self.selected_file = Some(new_path.clone());
-                                    }
-                                }
+                            if let Err(e) = self.try_rename_note() {
+                                error!("Rename failed: {e}");
                             }
-
-                            self.show_rename = false;
-                            self.rename_target = None;
-                            self.rename_input.clear();
-                            self.rename_error = None;
                         }
                      
                         if ui.button("Cancel").clicked() {
                             info!("Cancel clicked");
-                            self.show_rename = false;
+                            self.state_rename = false;
                             self.rename_target = None;
                             self.rename_input.clear();
                             self.rename_error = None;
                         }
                     });
                 });
+            self.state_rename = open;
         }
+    }
+
+    fn try_rename_note(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let db = crate::db::database::Database::new(&self.db_path)?;
+        println!("{:?}", self.selected_index);
+        let _ = db.update_note_name(self.selected_index.unwrap(), &self.rename_input);
+
+        self.state_rename = false;
+        self.rename_target = None;
+        self.rename_input.clear();
+        self.rename_error = None;
+        // refresh ui
+        self.load_rows = false;
+        Ok(())
     }
 }

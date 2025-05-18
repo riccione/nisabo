@@ -7,7 +7,7 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let _archive_path = self.archive_path.clone();
 
-        if self.show_rename {
+        if self.state_rename {
             self.show_rename(ctx);
         }
 
