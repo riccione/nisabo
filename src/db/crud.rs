@@ -1,9 +1,7 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use rusqlite::{Connection, Result};
-use crate::app::App;
-use crate::config::AppConfig;
 
-pub fn create_db(app: &mut App, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+pub fn create_db(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     // create a sqlite db
     if path.try_exists()? {
         return Err(format!("DB already exists at {:?}", path).into());
@@ -32,12 +30,19 @@ pub fn create_db(app: &mut App, path: &PathBuf) -> Result<(), Box<dyn std::error
         ),
     )?;
 
-    let config = AppConfig {
-        last_archive_path: Some(path.clone()),
-    };
-    config.save_config();
-
-    app.archive_path = Some(path.clone());
-
     Ok(())
+}
+
+pub fn ls(path: &Path) -> Result<Vec<String>> {
+    let conn = Connection::open(path)?;
+
+    let mut x = conn.prepare("SELECT name FROM archive")?;
+    let archive_iter = x.query_map([], |row| row.get(0))?;
+
+    let mut names = Vec::new();
+    for x in archive_iter {
+        names.push(x?);
+    }
+
+    Ok(names)
 }

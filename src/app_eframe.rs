@@ -47,6 +47,7 @@ impl eframe::App for App {
 
                     // show list of *.md files only
                     // self.show_file_list(ui, &archive_path);
+                    self.show_db_ls(ui, &archive_path);
                 });
 
             egui::SidePanel::right("right panel")

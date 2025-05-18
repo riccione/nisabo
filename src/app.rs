@@ -17,6 +17,8 @@ pub struct App {
     pub show_rename: bool,
     pub rename_error: Option<String>,
     pub db_error: Option<String>,
+    pub load_rows: bool, // trigger loading
+    pub names: Vec<String>,
 }
 
 impl App {
@@ -32,6 +34,8 @@ impl App {
             show_rename: false,
             rename_error: None,
             db_error: None,
+            load_rows: false,
+            names: Vec::new(),
         }
     }
 
@@ -58,8 +62,16 @@ impl App {
 
             let archive_path = path.join(format!("{}.db", archive_name));
 
-            self.db_error = match crate::db::crud::create_db(self, &archive_path) {
-                Ok(_) => None,
+            self.db_error = match crate::db::crud::create_db(&archive_path) {
+                Ok(_) => {
+                    let config = AppConfig {
+                        last_archive_path: Some(archive_path.clone()),
+                    };
+                    config.save_config();
+
+                    self.archive_path = Some(archive_path);
+                    None
+                },
                 Err(e) => Some(format!("Failed to create DB: {e}")),
             };
             info!("DB ERR: {:?}", self.db_error);
@@ -79,6 +91,38 @@ impl App {
         } else {
             error!("No directory selected");
         }
+    }
+
+    pub fn show_db_ls(&mut self, ui: &mut egui::Ui, archive_path: &Path) {
+    if !self.load_rows {
+        match crate::db::crud::ls(archive_path) {
+            Ok(names) => {
+                self.names = names;
+                self.load_rows = true;
+            }
+            Err(e) => {
+                error!("Error loading names from table archive: {e}");
+                self.names.clear();
+            }
+        }
+    }
+
+    ui.heading("Notes list");
+
+    if self.names.is_empty() {
+        ui.label("No notes found");
+    } else {
+        egui::ScrollArea::vertical().show(ui, |ui| {
+            for x in &self.names {
+                let response = ui.label(x);
+
+                if response.clicked() {
+                    println!("note clicked");
+                }
+            }
+        });
+    }
+    
     }
 
     pub fn show_file_list(&mut self, ui: &mut egui::Ui, archive_path: &Path) {
