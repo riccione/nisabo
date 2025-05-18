@@ -47,4 +47,11 @@ impl Database {
         let names = rows.collect::<Result<Vec<_>,_>>()?;
         Ok(names)
     }
+
+    pub fn update_note_name(&self, id: i32, new_name: &str) -> Result<usize> {
+        self.conn.execute(
+            "UPDATE note SET name = ?1 WHERE id = ?2",
+            (new_name, id),
+        )
+    }
 }
