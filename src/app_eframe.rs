@@ -1,7 +1,7 @@
 use eframe::egui::{self, RichText, Color32, Button};
 use log::{info};
 use crate::ui::about::show_about;
-use crate::app::App;
+use crate::app::{App, SidebarTab};
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
@@ -40,11 +40,34 @@ impl eframe::App for App {
                 .default_width(200.0)
                 .show(ctx, |ui| {
                     ui.vertical_centered(|ui| {
+                        // Tabs
+                        ui.horizontal(|ui| {
+                            if ui.selectable_label(self.selected_tab == SidebarTab::Notes, "Notes").clicked() {
+                                self.selected_tab = SidebarTab::Notes;
+                            }
+                            if ui.selectable_label(self.selected_tab == SidebarTab::Trash, "Trash").clicked() {
+                                self.selected_tab = SidebarTab::Trash;
+                            }
+                        });
+
+
                         //ui.heading("Files in Archive");
                         ui.separator();
                     });
 
-                    let _ = self.show_db_ls(ui);
+                    // Tab content
+                    match self.selected_tab {
+                        SidebarTab::Notes => {
+                            let _ = self.show_db_ls(ui); // Your existing method for listing notes
+                        },
+                        SidebarTab::Trash => {
+                            //let _ = self.show_trash(ui); // You should implement this method to show soft-deleted notes
+                            //let _ = self.show_db_ls(ui); // Your existing method for listing notes
+                            println!("Trash tab");
+                        }
+                    }
+
+                    //let _ = self.show_db_ls(ui);
                 });
 
             egui::SidePanel::right("right panel")

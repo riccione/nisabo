@@ -6,6 +6,12 @@ use log::{info, error};
 use crate::config::AppConfig;
 use std::error::Error;
 
+#[derive(PartialEq)]
+pub enum SidebarTab {
+    Notes,
+    Trash,
+}
+
 #[derive(Default)]
 pub struct App {
     pub archive_name: String,
@@ -23,6 +29,13 @@ pub struct App {
     pub names: Vec<(i32, String)>,
     pub selected_index: Option<i32>,
     pub state_start: bool,
+    pub selected_tab: SidebarTab,
+}
+
+impl Default for SidebarTab {
+    fn default() -> Self {
+        SidebarTab::Notes
+    }
 }
 
 impl App {
@@ -43,6 +56,7 @@ impl App {
             names: Vec::<(i32, String)>::new(),
             selected_index: None,
             state_start: false,
+            selected_tab: SidebarTab::Notes,
         }
     }
 
