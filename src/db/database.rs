@@ -1,4 +1,5 @@
 use rusqlite::{Connection, Result};
+use chrono::Utc;
 
 pub struct Database {
     conn: Connection,
@@ -25,7 +26,7 @@ impl Database {
         
         self.conn.execute(
            "INSERT INTO note (
-                name, content, created_at, updated_at
+                name, content, created_at, updated_at, deleted_at
             ) VALUES (?1, ?2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)
             ",
             (
@@ -53,6 +54,31 @@ impl Database {
         self.conn.execute(
             "UPDATE note SET name = ?1 WHERE id = ?2",
             (new_name, id),
+        )
+    }
+    
+    pub fn delete_note_soft(&self, id: i32) -> Result<usize> {
+        let deleted_at = Utc::now()
+            .naive_utc()
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string();
+        self.conn.execute(
+            "UPDATE note SET deleted_at = ?1 WHERE id = ?2",
+            (deleted_at, id),
+        )
+    }
+    
+    pub fn delete_note_hard(&self, id: i32) -> Result<usize> {
+        self.conn.execute(
+            "DELETE FROM note WHERE id = ?1",
+            &[&id],
+        )
+    }
+    
+    pub fn restore_note(&self, id: i32) -> Result<usize> {
+        self.conn.execute(
+            "UPDATE note SET deleted_at = NULL WHERE id = ?1",
+            &[&id],
         )
     }
 }

@@ -183,13 +183,17 @@ impl App {
 
                     ui.horizontal(|ui| {
                         ui.text_edit_singleline(&mut self.rename_input);
-
-                        if ui.button("Rename").clicked() {
-                            if let Err(e) = self.try_rename_note() {
-                                error!("Rename failed: {e}");
+                        
+                        if self.rename_input.trim().is_empty() {
+                            self.rename_error = Some("Name cannot be empty".to_string());
+                        } else {
+                            if ui.button("Rename").clicked() {
+                                if let Err(e) = self.try_rename_note() {
+                                    error!("Rename failed: {e}");
+                                }
                             }
                         }
-                     
+                  
                         if ui.button("Cancel").clicked() {
                             info!("Cancel clicked");
                             self.state_rename = false;
@@ -199,7 +203,12 @@ impl App {
                         }
                     });
                 });
-            self.state_rename = open;
+            if !open {
+            self.state_rename = false;
+            self.rename_target = None;
+            self.rename_input.clear();
+            self.rename_error = None;
+            }
         }
     }
 
