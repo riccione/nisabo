@@ -4,6 +4,7 @@ use std::fs;
 use eframe::egui;
 use log::{info, error};
 use crate::config::AppConfig;
+use std::error::Error;
 
 #[derive(Default)]
 pub struct App {
@@ -52,7 +53,7 @@ impl App {
         app
     }
 
-    pub fn create_db(&mut self) {
+    pub fn create_db(&mut self) -> Result<(), Box<dyn Error>> {
         if let Some(path) = FileDialog::new().pick_folder() {
             let archive_name = if self.archive_name.is_empty() {
                 "archive"
@@ -61,23 +62,29 @@ impl App {
             };
 
             let archive_path = path.join(format!("{}.db", archive_name));
-
-            self.db_error = match crate::db::crud::create_db(&archive_path) {
-                Ok(_) => {
+            
+            if archive_path.try_exists()? {
+                self.db_error = Some(format!("Database already exists at {:?}", 
+                                             archive_path));
+            } else {
+                if let Some(path_str) = archive_path.to_str() {
+                    let db = crate::db::database::Database::new(path_str)?;
+                    db.init_tables()?;
+                    
                     let config = AppConfig {
                         last_archive_path: Some(archive_path.clone()),
                     };
                     config.save_config();
 
                     self.archive_path = Some(archive_path);
-                    None
-                },
-                Err(e) => Some(format!("Failed to create DB: {e}")),
-            };
-            info!("DB ERR: {:?}", self.db_error);
+                } else {
+                    self.db_error = Some("Path contains invalid UTF-8".to_string());
+                }
+            }
         } else {
             error!("No directory selected");
         }
+        Ok(())
     }
 
     pub fn open_archive(&mut self) {
