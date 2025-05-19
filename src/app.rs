@@ -1,6 +1,5 @@
 use std::path::{PathBuf};
 use rfd::FileDialog;
-use std::fs;
 use eframe::egui;
 use log::{info, error};
 use crate::config::AppConfig;
@@ -17,7 +16,6 @@ pub struct App {
     pub archive_name: String,
     pub archive_path: Option<PathBuf>,
     pub db_path: String,
-    pub selected_file: Option<PathBuf>,
     pub selected_file_content: Option<String>,
     pub show_about: bool,
     pub rename_target: Option<PathBuf>,
@@ -32,6 +30,10 @@ pub struct App {
     pub selected_index: Option<i32>,
     pub state_start: bool,
     pub selected_tab: SidebarTab,
+    pub show_settings: bool,
+    pub font_size: f32,
+    pub default_font_size: f32,
+    pub config: AppConfig,
 }
 
 impl Default for SidebarTab {
@@ -46,7 +48,6 @@ impl App {
             archive_name: String::new(),
             archive_path: None,
             db_path: String::new(),
-            selected_file: None,
             selected_file_content: None,
             show_about: false,
             rename_target: None,
@@ -61,10 +62,14 @@ impl App {
             selected_index: None,
             state_start: false,
             selected_tab: SidebarTab::Notes,
+            show_settings: false,
+            font_size: 13.0,
+            default_font_size: 13.0,
+            config: AppConfig::load_config(),
         }
     }
 
-    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         let mut app = Self::default_values();
         
         let config = AppConfig::load_config();
@@ -75,6 +80,13 @@ impl App {
                 app.state_start = true;
             }
         }
+        
+        app.font_size = if config.font_size < 1.0 { // without config.toml file
+            app.default_font_size
+        } else {
+            config.font_size
+        };
+        app.apply_font_size(&cc.egui_ctx); 
 
         app
     }
@@ -99,6 +111,7 @@ impl App {
                     
                     let config = AppConfig {
                         last_archive_path: Some(archive_path.clone()),
+                        font_size: self.font_size,
                     };
                     config.save_config();
 
@@ -121,6 +134,7 @@ impl App {
             self.archive_path = Some(path.clone());
             let config = AppConfig {
                 last_archive_path: self.archive_path.clone(),
+                font_size: self.font_size,
             };
             config.save_config();
             
@@ -281,10 +295,10 @@ impl App {
                     });
                 });
             if !open {
-            self.state_rename = false;
-            self.rename_target = None;
-            self.rename_input.clear();
-            self.rename_error = None;
+                self.state_rename = false;
+                self.rename_target = None;
+                self.rename_input.clear();
+                self.rename_error = None;
             }
         }
     }
@@ -334,5 +348,66 @@ impl App {
         self.load_rows = false;
         self.state_trash_load = false;
         Ok(())
+    }
+
+    pub fn show_font_settings(&mut self, ctx: &egui::Context) {
+        let mut open = self.show_settings;
+
+        if self.show_settings {
+            egui::Window::new("Font Settings")
+                .collapsible(false)
+                .resizable(false)
+                .default_width(250.0)
+                .open(&mut open) // toggles based on state
+                .show(ctx, |ui| {
+                    ui.label("Select font size:");
+
+                    let font_sizes = vec![12.0, 13.0, 14.0, 16.0, 18.0, 20.0, 22.0, 24.0];
+                    let mut current_size = self.font_size;
+
+                    egui::ComboBox::from_label("")
+                        .selected_text(format!("{:.1}", current_size))
+                        .show_ui(ui, |ui| {
+                            for &size in &font_sizes {
+                                if ui
+                                    .selectable_value(&mut current_size, size, format!("{size}"))
+                                    .clicked()
+                                {
+                                    self.font_size = size;
+                                    self.config.font_size = size;
+                                    self.apply_font_size(ctx);
+                                    self.config.save_config();
+                                }
+                            }
+                        });
+
+                    if ui.button("Reset to default").clicked() {
+                        self.font_size = self.default_font_size;
+                        self.apply_font_size(ctx);
+                    }
+
+                    if ui.button("Close").clicked() {
+                        self.show_settings = false;
+                    }
+                });
+            if !open {
+                self.show_settings = false;
+            }
+        }
+    }
+    
+    fn apply_font_size(&self, ctx: &egui::Context) {
+        let mut style = (*ctx.style()).clone();
+
+        style.text_styles = [
+            (egui::TextStyle::Heading, egui::FontId::new(self.font_size + 6.0, egui::FontFamily::Proportional)),
+            (egui::TextStyle::Body, egui::FontId::new(self.font_size, egui::FontFamily::Proportional)),
+            (egui::TextStyle::Monospace, egui::FontId::new(self.font_size - 2.0, egui::FontFamily::Monospace)),
+            (egui::TextStyle::Button, egui::FontId::new(self.font_size, egui::FontFamily::Proportional)),
+            (egui::TextStyle::Small, egui::FontId::new(self.font_size - 4.0, egui::FontFamily::Proportional)),
+        ]
+        .into();
+
+        ctx.set_style(style);
     }
 }

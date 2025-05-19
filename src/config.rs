@@ -7,6 +7,7 @@ use log::{info};
 #[derive(Serialize, Deserialize, Default)]
 pub struct AppConfig {
     pub last_archive_path: Option<PathBuf>,
+    pub font_size: f32,
 }
 
 impl AppConfig {
@@ -19,6 +20,7 @@ impl AppConfig {
         info!("loading config");
         if let Some(config_path) = Self::get_config_path() {
             info!("{:?}", config_path);
+
             if let Ok(data) = fs::read_to_string(config_path) {
                 if let Ok(config) = toml::from_str::<AppConfig>(&data) {
                     return config;
@@ -36,13 +38,13 @@ impl AppConfig {
                 let _ = fs::create_dir_all(parent);
             }
             
-            /*
             let config = AppConfig {
-                last_archive_path: self.archive_path.clone(),
+                last_archive_path: self.last_archive_path.clone(),
+                font_size: self.font_size,
             };
-            */
+            println!("Values: {}", self.font_size);
 
-            if let Ok(toml_str) = toml::to_string_pretty(&self) {
+            if let Ok(toml_str) = toml::to_string_pretty(&config) {
                 let _ = fs::File::create(&config_path)
                     .and_then(|mut f| f.write_all(toml_str.as_bytes()));
             }

@@ -10,10 +10,15 @@ impl eframe::App for App {
         if self.state_rename {
             self.show_rename(ctx);
         }
+        
+        if self.show_settings {
+            self.show_font_settings(ctx);
+        }
 
         if self.state_start {
             egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
                 egui::menu::bar(ui, |ui| {
+                    ui.horizontal(|ui| {
                     ui.menu_button("Archive", |ui| {
                         if ui.button("Create").clicked() {
                             info!("Create clicked");
@@ -21,6 +26,11 @@ impl eframe::App for App {
                         }
                         if ui.button("Open").clicked() {
                             info!("Open clicked");
+                            ui.close_menu();
+                        }
+                        if ui.button("Settings").clicked() {
+                            info!("Settings");
+                            self.show_settings = true;
                             ui.close_menu();
                         }
                     });
@@ -31,6 +41,7 @@ impl eframe::App for App {
                             self.show_about = true;
                             ui.close_menu();
                         }
+                    });
                     });
                 });
             });
