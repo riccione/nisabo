@@ -44,9 +44,13 @@ impl eframe::App for App {
                         ui.horizontal(|ui| {
                             if ui.selectable_label(self.selected_tab == SidebarTab::Notes, "Notes").clicked() {
                                 self.selected_tab = SidebarTab::Notes;
+                                self.selected_index = None;
+                                self.state_rename = false;
                             }
                             if ui.selectable_label(self.selected_tab == SidebarTab::Trash, "Trash").clicked() {
                                 self.selected_tab = SidebarTab::Trash;
+                                self.selected_index = None;
+                                self.state_rename = false;
                             }
                         });
 

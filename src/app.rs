@@ -181,6 +181,7 @@ impl App {
                             info!("Delete clicked");
                             // TODO: handle delete
                             let _ = self.try_delete_note(id);
+                            ui.close_menu();
                         }
                     });
                 }
@@ -209,26 +210,32 @@ impl App {
             ui.label("Trash is empty");
         } else {
             egui::ScrollArea::vertical().show(ui, |ui| {
-                for (id, name) in &self.notes_deleted {
-                    let selected = Some(id) == self.selected_index.as_ref();
+                // for borrow issues
+                let xs: Vec<(i32, String)> = self.notes_deleted.iter()
+                    .map(|(id, name)| (*id, name.clone()))
+                    .collect();
+                for (id, name) in xs {
+                    let selected = Some(&id) == self.selected_index.as_ref();
 
                     let response = ui.add(egui::SelectableLabel::new(selected, name));
 
                     if response.clicked() {
-                        self.selected_index = Some(*id);
+                        self.selected_index = Some(id);
                         println!("note clicked {:?}", self.selected_index);
                     }
 
                     // right btn
                     response.context_menu(|ui| {
+                        ui.set_min_width(120.0);
                         if ui.button("Restore").clicked() {
-                            info!("Rename clicked");
-                            // TODO: implement
+                            let _ = self.try_restore_note(id);
+                            ui.close_menu();
                         }
 
                         if ui.button("Permanently Delete").clicked() {
                             info!("Delete clicked");
-                            // TODO: implement
+                            let _ = self.try_permanently_delete(id);
+                            ui.close_menu();
                         }
                     });
                 }
@@ -303,6 +310,29 @@ impl App {
 
         // refresh ui
         self.load_rows = false;
+        self.state_trash_load = false;
+        Ok(())
+    }
+    
+    fn try_restore_note(&mut self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+        println!("id: {:?}", id);
+        let db = crate::db::database::Database::new(&self.db_path)?;
+        let _ = db.restore_note(id);
+
+        // refresh ui
+        self.load_rows = false;
+        self.state_trash_load = false;
+        Ok(())
+    }
+    
+    fn try_permanently_delete(&mut self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+        println!("id: {:?}", id);
+        let db = crate::db::database::Database::new(&self.db_path)?;
+        let _ = db.delete_note_hard(id);
+
+        // refresh ui
+        self.load_rows = false;
+        self.state_trash_load = false;
         Ok(())
     }
 }
