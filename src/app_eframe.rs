@@ -1,4 +1,4 @@
-use eframe::egui::{self, RichText, Color32, Button};
+use eframe::egui::{self, Align, Button, Color32, Layout, RichText};
 use log::{info};
 use crate::ui::about::show_about;
 use crate::app::{App, SidebarTab};
@@ -13,6 +13,10 @@ impl eframe::App for App {
         
         if self.show_settings {
             self.show_font_settings(ctx);
+        }
+        
+        if self.state_add_new_note {
+            self.show_add_new_note(ctx);
         }
 
         if self.state_start {
@@ -43,6 +47,16 @@ impl eframe::App for App {
                         }
                     });
                     });
+                });
+            });
+            
+            egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
+                ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
+                    if ui.button("+").clicked() {
+                        println!("Add button clicked!");
+                        self.state_add_new_note = true;
+                        ui.close_menu();
+                    }
                 });
             });
 

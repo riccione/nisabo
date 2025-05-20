@@ -94,4 +94,13 @@ impl Database {
             &[&id],
         )
     }
+    
+    pub fn add_new_note(&self, name: &str) -> Result<usize> {
+        self.conn.execute(
+            "INSERT INTO note (
+                name, created_at, updated_at, deleted_at
+            ) VALUES (?1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)",
+            &[&name],
+        )
+    }
 }

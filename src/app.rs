@@ -34,6 +34,9 @@ pub struct App {
     pub font_size: f32,
     pub default_font_size: f32,
     pub config: AppConfig,
+    pub state_add_new_note: bool,
+    pub add_new_note_input: String,
+    pub add_new_note_error: Option<String>,
 }
 
 impl Default for SidebarTab {
@@ -66,6 +69,9 @@ impl App {
             font_size: 13.0,
             default_font_size: 13.0,
             config: AppConfig::load_config(),
+            state_add_new_note: false,
+            add_new_note_input: String::new(),
+            add_new_note_error: None,
         }
     }
 
@@ -258,7 +264,6 @@ impl App {
         Ok(()) 
     }
 
-
     pub fn show_rename(&mut self, ctx: &egui::Context) { 
         if self.state_rename {
             // tmp var
@@ -409,5 +414,59 @@ impl App {
         .into();
 
         ctx.set_style(style);
+    }
+    
+    pub fn show_add_new_note(&mut self, ctx: &egui::Context) { 
+        if self.state_add_new_note {
+            // tmp var
+            let mut open = self.state_add_new_note;
+            egui::Window::new("Add new note")
+                .open(&mut open)
+                .resizable(false)
+                .show(ctx, |ui| {
+                    ui.label("Enter name: ");
+                    if let Some(e) = &self.add_new_note_error {
+                        ui.label(egui::RichText::new(e).color(egui::Color32::RED));
+                    }
+
+                    ui.horizontal(|ui| {
+                        ui.text_edit_singleline(&mut self.add_new_note_input);
+                        
+                        if self.add_new_note_input.trim().is_empty() {
+                            self.add_new_note_error = Some("Name cannot be empty".to_string());
+                        } else {
+                            if ui.button("Add").clicked() {
+                                if let Err(e) = self.try_add_new_note() {
+                                    error!("Add failed: {e}");
+                                }
+                            }
+                        }
+                  
+                        if ui.button("Cancel").clicked() {
+                            info!("Cancel clicked");
+                            self.state_add_new_note = false;
+                            self.add_new_note_input.clear();
+                            self.add_new_note_error = None;
+                        }
+                    });
+                });
+            if !open {
+                self.state_add_new_note = false;
+                self.add_new_note_input.clear();
+                self.add_new_note_error = None;
+            }
+        }
+    }
+    
+    fn try_add_new_note(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let db = crate::db::database::Database::new(&self.db_path)?;
+        let _ = db.add_new_note(&self.add_new_note_input);
+
+        self.state_add_new_note = false;
+        self.add_new_note_input.clear();
+        self.add_new_note_error = None;
+        // refresh ui
+        self.load_rows = false;
+        Ok(())
     }
 }
