@@ -2,6 +2,7 @@ use eframe::egui::{self, Align, Button, Color32, Layout, RichText};
 use log::{info};
 use crate::ui::about::show_about;
 use crate::app::{App, SidebarTab};
+use crate::ui::menu_bar;
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
@@ -20,35 +21,7 @@ impl eframe::App for App {
         }
 
         if self.state_start {
-            egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
-                egui::menu::bar(ui, |ui| {
-                    ui.horizontal(|ui| {
-                    ui.menu_button("Archive", |ui| {
-                        if ui.button("Create").clicked() {
-                            info!("Create clicked");
-                            ui.close_menu();
-                        }
-                        if ui.button("Open").clicked() {
-                            info!("Open clicked");
-                            ui.close_menu();
-                        }
-                        if ui.button("Settings").clicked() {
-                            info!("Settings");
-                            self.show_settings = true;
-                            ui.close_menu();
-                        }
-                    });
-
-                    ui.menu_button("Help", |ui| {
-                        if ui.button("About").clicked() {
-                            info!("About clicked");
-                            self.show_about = true;
-                            ui.close_menu();
-                        }
-                    });
-                    });
-                });
-            });
+            self.show_menu_bar(ctx);    
             
             egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
                 ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
