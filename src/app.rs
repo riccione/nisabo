@@ -16,7 +16,7 @@ pub struct App {
     pub archive_name: String,
     pub archive_path: Option<PathBuf>,
     pub db_path: String,
-    pub selected_file_content: Option<String>,
+    pub selected_note_content: Option<String>,
     pub show_about: bool,
     pub rename_target: Option<PathBuf>,
     pub rename_input: String,
@@ -37,6 +37,7 @@ pub struct App {
     pub state_add_new_note: bool,
     pub add_new_note_input: String,
     pub add_new_note_error: Option<String>,
+    pub edited_note: String,
 }
 
 impl Default for SidebarTab {
@@ -51,7 +52,7 @@ impl App {
             archive_name: String::new(),
             archive_path: None,
             db_path: String::new(),
-            selected_file_content: None,
+            selected_note_content: None,
             show_about: false,
             rename_target: None,
             rename_input: String::new(),
@@ -72,6 +73,7 @@ impl App {
             state_add_new_note: false,
             add_new_note_input: String::new(),
             add_new_note_error: None,
+            edited_note: String::new(),
         }
     }
 
@@ -182,7 +184,10 @@ impl App {
                     let response = ui.add(egui::SelectableLabel::new(selected, &name));
 
                     if response.clicked() {
+                        // clear content after previously selected note
+                        self.edited_note = String::new();
                         self.selected_index = Some(id);
+                        let _ = self.try_get_note(id);
                         println!("note clicked {:?}", self.selected_index);
                     }
 
@@ -467,6 +472,25 @@ impl App {
         self.add_new_note_error = None;
         // refresh ui
         self.load_rows = false;
+        Ok(())
+    }
+    
+    fn try_get_note(&mut self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+        let db = crate::db::database::Database::new(&self.db_path)?;
+        let (id, name, content) = db.get_note(id)?;
+        self.edited_note = content; 
+
+        Ok(())
+    }
+    
+    pub fn try_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(id) = self.selected_index {
+            let db = crate::db::database::Database::new(&self.db_path)?;
+            match db.update_note_content(id, &self.edited_note) {
+                Ok(_) => println!("Saved successfully!"),
+                Err(e) => println!("Failed to save: {e}"),
+            } 
+        }
         Ok(())
     }
 }

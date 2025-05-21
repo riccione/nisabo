@@ -2,7 +2,7 @@ use eframe::egui::{self, Align, Button, Color32, Layout, RichText};
 use log::{info};
 use crate::ui::about::show_about;
 use crate::app::{App, SidebarTab};
-use crate::ui::menu_bar;
+//use crate::ui::menu_bar;
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
@@ -29,6 +29,10 @@ impl eframe::App for App {
                         println!("Add button clicked!");
                         self.state_add_new_note = true;
                         ui.close_menu();
+                    }
+                    if ui.button("Save").clicked() {
+                        println!("Save button clicked!");
+                        let _ = self.try_update_note_content(); 
                     }
                 });
             });
@@ -70,7 +74,7 @@ impl eframe::App for App {
                 .resizable(true)
                 .default_width(200.0)
                 .show(ctx, |ui| {
-                    if let Some(content) = &self.selected_file_content {
+                    if let Some(content) = &self.selected_note_content {
                         ui.heading("TODO: File Stem");
                         ui.separator();
                         // TODO: add a separate fn - for now just a stub
@@ -80,12 +84,12 @@ impl eframe::App for App {
 
             egui::CentralPanel::default()
                 .show(ctx, |ui| {
-                    if let Some(content) = &self.selected_file_content {
-                        ui.heading("TODO: File Stem");
-                        ui.separator();
-                        // TODO: add a separate fn - for now just a stub
-                        ui.label(content);
-                    }
+                        ui.add_sized(
+                            ui.available_size(),
+                            egui::TextEdit::multiline(&mut self.edited_note)
+                            .lock_focus(true)
+                            .desired_width(f32::INFINITY)
+                        );
             });
 
             if self.show_about {

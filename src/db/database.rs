@@ -1,4 +1,4 @@
-use rusqlite::{Connection, Result};
+use rusqlite::{Connection, params, Result};
 use chrono::Utc;
 
 pub struct Database {
@@ -101,6 +101,30 @@ impl Database {
                 name, created_at, updated_at, deleted_at
             ) VALUES (?1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)",
             &[&name],
+        )
+    }
+    
+    pub fn get_note(&self, id: i32) -> Result<(i32, String, String)> {
+        self.conn.query_row(
+            "SELECT id, name, content FROM note WHERE id = ?1",
+            &[&id],
+            |row| {
+                let id: i32 = row.get(0)?;
+                let name: String = row.get(1)?;
+                let content: String = row.get(2)?;
+                Ok((id, name, content))
+            }
+        )
+    }
+    
+    pub fn update_note_content(&self, id: i32, new_content: &str) -> Result<usize> {
+        let updated_at = Utc::now()
+            .naive_utc()
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string();
+        self.conn.execute(
+            "UPDATE note SET content = ?1, updated_at = ?2 WHERE id = ?3",
+            params![new_content, updated_at, id],
         )
     }
 }
