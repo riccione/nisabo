@@ -1,4 +1,4 @@
-use eframe::egui::{self, Align, Button, Color32, Layout, RichText};
+use eframe::egui::{self, Button, Color32, RichText};
 use log::{info};
 use crate::ui::about::show_about;
 use crate::app::{App, SidebarTab};
@@ -22,21 +22,9 @@ impl eframe::App for App {
 
         if self.state_start {
             self.show_menu_bar(ctx);    
-            
-            egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
-                ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
-                    if ui.button("+").clicked() {
-                        println!("Add button clicked!");
-                        self.state_add_new_note = true;
-                        ui.close_menu();
-                    }
-                    if ui.button("Save").clicked() {
-                        println!("Save button clicked!");
-                        let _ = self.try_update_note_content(); 
-                    }
-                });
-            });
 
+            self.show_toolbar(ctx);
+            
             egui::SidePanel::left("left panel")
                 .resizable(true)
                 .default_width(200.0)
@@ -74,22 +62,21 @@ impl eframe::App for App {
                 .resizable(true)
                 .default_width(200.0)
                 .show(ctx, |ui| {
-                    if let Some(content) = &self.selected_note_content {
-                        ui.heading("TODO: File Stem");
-                        ui.separator();
-                        // TODO: add a separate fn - for now just a stub
-                        ui.label(content);
+                    if self.edited_note.is_empty() {
+                        ui.heading("Preview");
+                    } else {
+                        ui.label(self.edited_note.as_str());
                     }
                 });
 
             egui::CentralPanel::default()
                 .show(ctx, |ui| {
-                        ui.add_sized(
-                            ui.available_size(),
-                            egui::TextEdit::multiline(&mut self.edited_note)
-                            .lock_focus(true)
-                            .desired_width(f32::INFINITY)
-                        );
+                    ui.add_sized(
+                        ui.available_size(),
+                        egui::TextEdit::multiline(&mut self.edited_note)
+                        .lock_focus(true)
+                        .desired_width(f32::INFINITY)
+                    );
             });
 
             if self.show_about {
