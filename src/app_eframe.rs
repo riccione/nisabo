@@ -1,8 +1,7 @@
 use eframe::egui::{self, Button, Color32, RichText};
 use log::{info};
 use crate::ui::about::show_about;
-use crate::app::{App, SidebarTab};
-//use crate::ui::menu_bar;
+use crate::app::{App};
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
@@ -24,61 +23,9 @@ impl eframe::App for App {
             self.show_menu_bar(ctx);    
 
             self.show_toolbar(ctx);
+
+            self.show_sidepanels(ctx);
             
-            egui::SidePanel::left("left panel")
-                .resizable(true)
-                .default_width(200.0)
-                .show(ctx, |ui| {
-                    ui.vertical_centered(|ui| {
-                        // Tabs
-                        ui.horizontal(|ui| {
-                            if ui.selectable_label(self.selected_tab == SidebarTab::Notes, "Notes").clicked() {
-                                self.selected_tab = SidebarTab::Notes;
-                                self.selected_index = None;
-                                self.state_rename = false;
-                            }
-                            if ui.selectable_label(self.selected_tab == SidebarTab::Trash, "Trash").clicked() {
-                                self.selected_tab = SidebarTab::Trash;
-                                self.selected_index = None;
-                                self.state_rename = false;
-                            }
-                        });
-
-                        ui.separator();
-                    });
-
-                    // Tab content
-                    match self.selected_tab {
-                        SidebarTab::Notes => {
-                            let _ = self.show_db_ls(ui);
-                        },
-                        SidebarTab::Trash => {
-                            let _ = self.show_trash(ui);
-                        }
-                    }
-                });
-
-            egui::SidePanel::right("right panel")
-                .resizable(true)
-                .default_width(200.0)
-                .show(ctx, |ui| {
-                    if self.edited_note.is_empty() {
-                        ui.heading("Preview");
-                    } else {
-                        ui.label(self.edited_note.as_str());
-                    }
-                });
-
-            egui::CentralPanel::default()
-                .show(ctx, |ui| {
-                    ui.add_sized(
-                        ui.available_size(),
-                        egui::TextEdit::multiline(&mut self.edited_note)
-                        .lock_focus(true)
-                        .desired_width(f32::INFINITY)
-                    );
-            });
-
             if self.show_about {
                 show_about(ctx, &mut self.show_about);
             }
@@ -101,7 +48,7 @@ impl eframe::App for App {
 
                     if ui.add(btn_create_archive).clicked() {
                         info!("Create Archive clicked");
-                        self.create_db();
+                        let _ = self.create_db();
                     }
                     
                     info!("{:?}", self.db_error);
