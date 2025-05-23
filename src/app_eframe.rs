@@ -25,7 +25,7 @@ impl eframe::App for App {
             self.show_toolbar(ctx);
 
             self.show_sidepanels(ctx);
-            
+        
             if self.show_about {
                 show_about(ctx, &mut self.show_about);
             }
