@@ -140,6 +140,7 @@ impl App {
             self.state_start = true;
             
             // get rid of ghost data
+            self.selected_index = None;
             self.original_content = String::new();
             self.edited_content = String::new();
         } else {

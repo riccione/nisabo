@@ -53,11 +53,13 @@ impl App {
                 egui::ScrollArea::vertical()
                     .auto_shrink([false; 2])
                     .show(ui, |ui| {
-                        ui.add(
-                            egui::TextEdit::multiline(&mut self.edited_content)
-                                .lock_focus(true)
-                                .desired_width(f32::INFINITY)
-                        );
+                        if let Some(_) = self.selected_index {
+                            ui.add(
+                                egui::TextEdit::multiline(&mut self.edited_content)
+                                    .lock_focus(true)
+                                    .desired_width(f32::INFINITY)
+                            );
+                        }
                     });
         });
     }
