@@ -15,6 +15,9 @@ impl App {
                     println!("Save button clicked!");
                     let _ = self.try_update_note_content(); 
                 }
+                if ui.button("Right").clicked() {
+                    self.state_is_right_panel_visible = !self.state_is_right_panel_visible;
+                }
             });
         });
     }

@@ -36,6 +36,7 @@ pub struct App {
     pub add_new_note_error: Option<String>,
     pub original_content: String,
     pub edited_content: String,
+    pub state_is_right_panel_visible: bool,
 }
 
 impl Default for SidebarTab {
@@ -70,6 +71,7 @@ impl App {
             add_new_note_error: None,
             original_content: String::new(),
             edited_content: String::new(),
+            state_is_right_panel_visible: true,
         }
     }
 

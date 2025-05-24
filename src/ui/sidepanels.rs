@@ -37,16 +37,18 @@ impl App {
                 }
             });
 
-        egui::SidePanel::right("right panel")
-            .resizable(true)
-            .default_width(200.0)
-            .show(ctx, |ui| {
-                if self.edited_content.is_empty() {
-                    ui.heading("Preview");
-                } else {
-                    ui.label(self.edited_content.as_str());
-                }
-            });
+        if self.state_is_right_panel_visible {
+            egui::SidePanel::right("right panel")
+                .resizable(true)
+                .default_width(200.0)
+                .show(ctx, |ui| {
+                    if self.edited_content.is_empty() {
+                        ui.heading("Preview");
+                    } else {
+                        ui.label(self.edited_content.as_str());
+                    }
+                });
+        }
 
         egui::CentralPanel::default()
             .show(ctx, |ui| {
