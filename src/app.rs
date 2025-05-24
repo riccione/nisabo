@@ -13,8 +13,6 @@ pub enum SidebarTab {
 
 #[derive(Default)]
 pub struct App {
-    pub archive_name: String,
-    pub archive_path: Option<PathBuf>,
     pub db_path: String,
     pub show_about: bool,
     pub rename_target: Option<PathBuf>,
@@ -49,8 +47,6 @@ impl Default for SidebarTab {
 impl App {
     pub fn default_values() -> Self {
         Self {
-            archive_name: String::new(),
-            archive_path: None,
             db_path: String::new(),
             show_about: false,
             rename_target: None,
@@ -83,7 +79,6 @@ impl App {
         let config = AppConfig::load_config();
         if let Some(x) = config.last_archive_path {
             if x.exists() {
-                app.archive_path = Some(x.clone());
                 app.db_path = x.to_string_lossy().into_owned();
                 app.state_start = true;
             }
@@ -105,8 +100,6 @@ impl App {
             .set_file_name("archive.db")
             .save_file() {
             
-            //let archive_path = path;
-            
             if path.try_exists()? {
                 self.db_error = Some(format!("Database already exists at {:?}", 
                                              path));
@@ -121,7 +114,6 @@ impl App {
                     };
                     config.save_config();
 
-                    self.archive_path = Some(path.clone());
                     self.state_start = true;
                     self.db_path = path.to_string_lossy().into_owned();
                 } else {
@@ -137,9 +129,8 @@ impl App {
     pub fn open_archive(&mut self) {
         if let Some(path) = FileDialog::new().pick_file() {
             info!("Archive opened from: {}", path.display());
-            self.archive_path = Some(path.clone());
             let config = AppConfig {
-                last_archive_path: self.archive_path.clone(),
+                last_archive_path: Some(path.clone()),
                 font_size: self.font_size,
             };
             config.save_config();

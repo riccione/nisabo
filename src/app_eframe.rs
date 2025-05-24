@@ -5,7 +5,6 @@ use crate::app::{App};
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let _archive_path = self.archive_path.clone();
 
         if self.state_rename {
             self.show_rename(ctx);
@@ -21,11 +20,13 @@ impl eframe::App for App {
 
         if self.state_start {
             self.show_menubar(ctx);    
+            // must be before sidepanels to reserve the space
+            self.show_statusbar(ctx);    
 
             self.show_toolbar(ctx);
 
             self.show_sidepanels(ctx);
-        
+            
             if self.show_about {
                 show_about(ctx, &mut self.show_about);
             }

@@ -50,12 +50,15 @@ impl App {
 
         egui::CentralPanel::default()
             .show(ctx, |ui| {
-                ui.add_sized(
-                    ui.available_size(),
-                    egui::TextEdit::multiline(&mut self.edited_content)
-                        .lock_focus(true)
-                        .desired_width(f32::INFINITY)
-                );
+                egui::ScrollArea::vertical()
+                    .auto_shrink([false; 2])
+                    .show(ui, |ui| {
+                        ui.add(
+                            egui::TextEdit::multiline(&mut self.edited_content)
+                                .lock_focus(true)
+                                .desired_width(f32::INFINITY)
+                        );
+                    });
         });
     }
 }
