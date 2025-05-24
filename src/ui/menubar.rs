@@ -3,7 +3,7 @@ use log::{info};
 use crate::app::{App};
 
 impl App {
-    pub fn show_menu_bar(&mut self, ctx: &egui::Context) {
+    pub fn show_menubar(&mut self, ctx: &egui::Context) {
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.horizontal(|ui| {
@@ -13,7 +13,8 @@ impl App {
                         ui.close_menu();
                     }
                     if ui.button("Open").clicked() {
-                        info!("Open clicked");
+                        self.open_archive();
+                        self.load_rows = false;
                         ui.close_menu();
                     }
                     if ui.button("Settings").clicked() {

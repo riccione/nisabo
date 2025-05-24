@@ -37,7 +37,7 @@ pub struct App {
     pub add_new_note_input: String,
     pub add_new_note_error: Option<String>,
     pub original_content: String,
-    pub edited_note: String,
+    pub edited_content: String,
 }
 
 impl Default for SidebarTab {
@@ -73,7 +73,7 @@ impl App {
             add_new_note_input: String::new(),
             add_new_note_error: None,
             original_content: String::new(),
-            edited_note: String::new(),
+            edited_content: String::new(),
         }
     }
 
@@ -183,7 +183,7 @@ impl App {
                     
                     let mut display_name = name.clone();
 
-                    if selected && self.edited_note != self.original_content {
+                    if selected && self.edited_content != self.original_content {
                         let marker = "*";
                         println!("Unsaved change!");
                         display_name = format!("{marker} {display_name}");
@@ -193,7 +193,7 @@ impl App {
                     
                     if response.clicked() {
                         // clear content after previously selected note
-                        self.edited_note = String::new();
+                        self.edited_content = String::new();
                         self.selected_index = Some(id);
                         let _ = self.try_get_note(id);
                         println!("note clicked {:?}", self.selected_index);
@@ -487,7 +487,7 @@ impl App {
         let db = crate::db::database::Database::new(&self.db_path)?;
         let (_, name, content) = db.get_note(id)?;
         self.original_content = content.clone();
-        self.edited_note = content; 
+        self.edited_content = content; 
 
         Ok(())
     }
@@ -495,10 +495,10 @@ impl App {
     pub fn try_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(id) = self.selected_index {
             let db = crate::db::database::Database::new(&self.db_path)?;
-            match db.update_note_content(id, &self.edited_note) {
+            match db.update_note_content(id, &self.edited_content) {
                 Ok(_) => {
                     println!("Saved successfully!");
-                    self.original_content = self.edited_note.clone();
+                    self.original_content = self.edited_content.clone();
                 }
                 Err(e) => println!("Failed to save: {e}"),
             } 

@@ -41,10 +41,10 @@ impl App {
             .resizable(true)
             .default_width(200.0)
             .show(ctx, |ui| {
-                if self.edited_note.is_empty() {
+                if self.edited_content.is_empty() {
                     ui.heading("Preview");
                 } else {
-                    ui.label(self.edited_note.as_str());
+                    ui.label(self.edited_content.as_str());
                 }
             });
 
@@ -52,9 +52,9 @@ impl App {
             .show(ctx, |ui| {
                 ui.add_sized(
                     ui.available_size(),
-                    egui::TextEdit::multiline(&mut self.edited_note)
-                    .lock_focus(true)
-                    .desired_width(f32::INFINITY)
+                    egui::TextEdit::multiline(&mut self.edited_content)
+                        .lock_focus(true)
+                        .desired_width(f32::INFINITY)
                 );
         });
     }

@@ -20,7 +20,7 @@ impl eframe::App for App {
         }
 
         if self.state_start {
-            self.show_menu_bar(ctx);    
+            self.show_menubar(ctx);    
 
             self.show_toolbar(ctx);
 

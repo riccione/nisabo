@@ -1,4 +1,4 @@
 pub mod about;
-pub mod menu_bar;
+pub mod menubar;
 pub mod toolbar;
 pub mod sidepanels;
