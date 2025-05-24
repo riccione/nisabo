@@ -100,32 +100,30 @@ impl App {
     }
 
     pub fn create_db(&mut self) -> Result<(), Box<dyn Error>> {
-        if let Some(path) = FileDialog::new().pick_folder() {
-            let archive_name = if self.archive_name.is_empty() {
-                "archive"
-            } else {
-                &self.archive_name
-            };
-
-            let archive_path = path.join(format!("{}.db", archive_name));
+        if let Some(path) = FileDialog::new()
+            .set_title("Save your Archive")
+            .set_file_name("archive.db")
+            .save_file() {
             
-            if archive_path.try_exists()? {
+            //let archive_path = path;
+            
+            if path.try_exists()? {
                 self.db_error = Some(format!("Database already exists at {:?}", 
-                                             archive_path));
+                                             path));
             } else {
-                if let Some(path_str) = archive_path.to_str() {
+                if let Some(path_str) = path.to_str() {
                     let db = crate::db::database::Database::new(path_str)?;
                     db.init_tables()?;
                     
                     let config = AppConfig {
-                        last_archive_path: Some(archive_path.clone()),
+                        last_archive_path: Some(path.clone()),
                         font_size: self.font_size,
                     };
                     config.save_config();
 
-                    self.archive_path = Some(archive_path.clone());
+                    self.archive_path = Some(path.clone());
                     self.state_start = true;
-                    self.db_path = archive_path.to_string_lossy().into_owned();
+                    self.db_path = path.to_string_lossy().into_owned();
                 } else {
                     self.db_error = Some("Path contains invalid UTF-8".to_string());
                 }
@@ -149,11 +147,16 @@ impl App {
             let x = path.clone();
             self.db_path = x.to_string_lossy().into_owned();
             self.state_start = true;
+            
+            // get rid of ghost data
+            self.original_content = String::new();
+            self.edited_content = String::new();
         } else {
             error!("No db file selected");
         }
     }
-    
+   
+    // TODO: rename and refactor, same for trash
     pub fn show_db_ls(&mut self, ui: &mut egui::Ui) 
         -> Result<(), Box<dyn Error>> {
         if !self.load_rows {
@@ -212,8 +215,9 @@ impl App {
 
                         if ui.button("Delete").clicked() {
                             info!("Delete clicked");
-                            // TODO: handle delete
                             let _ = self.try_delete_note(id);
+                            self.original_content = String::new();
+                            self.edited_content = String::new();
                             ui.close_menu();
                         }
                     });
@@ -254,7 +258,7 @@ impl App {
 
                     if response.clicked() {
                         self.selected_index = Some(id);
-                        println!("note clicked {:?}", self.selected_index);
+                        println!("Trash note clicked {:?}", self.selected_index);
                     }
 
                     // right btn
@@ -488,7 +492,6 @@ impl App {
         let (_, name, content) = db.get_note(id)?;
         self.original_content = content.clone();
         self.edited_content = content; 
-
         Ok(())
     }
     

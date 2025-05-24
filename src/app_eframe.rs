@@ -34,11 +34,6 @@ impl eframe::App for App {
                 ui.vertical_centered(|ui| {
                     ui.add_space(20.0);
 
-                    ui.label("Archive Name [optional]: ");
-                    ui.text_edit_singleline(&mut self.archive_name);
-                    
-                    ui.add_space(20.0);
-
                     let softer_red = Color32::from_rgb(200, 50, 50);
                     let txt_create_archive = RichText::new("Create Archive")
                         .size(24.0)
