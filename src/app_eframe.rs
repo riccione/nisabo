@@ -6,6 +6,14 @@ use crate::app::{App};
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
 
+        // apply theme
+        ctx.set_visuals(if self.state_is_dark_mode {
+            println!("dark mode is on");
+            egui::Visuals::dark()
+        } else {
+            egui::Visuals::light()
+        });
+
         if self.state_rename {
             self.show_rename(ctx);
         }

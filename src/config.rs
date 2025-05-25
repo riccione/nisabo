@@ -8,6 +8,7 @@ use log::{info};
 pub struct AppConfig {
     pub last_archive_path: Option<PathBuf>,
     pub font_size: f32,
+    pub is_dark_mode: Option<bool>,
 }
 
 impl AppConfig {
@@ -41,6 +42,7 @@ impl AppConfig {
             let config = AppConfig {
                 last_archive_path: self.last_archive_path.clone(),
                 font_size: self.font_size,
+                is_dark_mode: self.is_dark_mode,
             };
             println!("Values: {}", self.font_size);
 

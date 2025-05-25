@@ -37,6 +37,7 @@ pub struct App {
     pub original_content: String,
     pub edited_content: String,
     pub state_is_right_panel_on: bool,
+    pub state_is_dark_mode: bool,
 }
 
 impl Default for SidebarTab {
@@ -72,6 +73,7 @@ impl App {
             original_content: String::new(),
             edited_content: String::new(),
             state_is_right_panel_on: true,
+            state_is_dark_mode: true,
         }
     }
 
@@ -93,6 +95,8 @@ impl App {
         };
         app.apply_font_size(&cc.egui_ctx); 
 
+        app.state_is_dark_mode = config.is_dark_mode.unwrap_or(true);
+
         app
     }
 
@@ -113,6 +117,7 @@ impl App {
                     let config = AppConfig {
                         last_archive_path: Some(path.clone()),
                         font_size: self.font_size,
+                        is_dark_mode: Some(self.state_is_dark_mode),
                     };
                     config.save_config();
 
@@ -134,6 +139,7 @@ impl App {
             let config = AppConfig {
                 last_archive_path: Some(path.clone()),
                 font_size: self.font_size,
+                is_dark_mode: Some(self.state_is_dark_mode),
             };
             config.save_config();
             
@@ -364,67 +370,6 @@ impl App {
         self.load_rows = false;
         self.state_trash_load = false;
         Ok(())
-    }
-
-    pub fn show_font_settings(&mut self, ctx: &egui::Context) {
-        let mut open = self.show_settings;
-
-        if self.show_settings {
-            egui::Window::new("Font Settings")
-                .collapsible(false)
-                .resizable(false)
-                .default_width(250.0)
-                .open(&mut open) // toggles based on state
-                .show(ctx, |ui| {
-                    ui.label("Select font size:");
-
-                    let font_sizes = vec![12.0, 13.0, 14.0, 16.0, 18.0, 20.0, 22.0, 24.0];
-                    let mut current_size = self.font_size;
-
-                    egui::ComboBox::from_label("")
-                        .selected_text(format!("{:.1}", current_size))
-                        .show_ui(ui, |ui| {
-                            for &size in &font_sizes {
-                                if ui
-                                    .selectable_value(&mut current_size, size, format!("{size}"))
-                                    .clicked()
-                                {
-                                    self.font_size = size;
-                                    self.config.font_size = size;
-                                    self.apply_font_size(ctx);
-                                    self.config.save_config();
-                                }
-                            }
-                        });
-
-                    if ui.button("Reset to default").clicked() {
-                        self.font_size = self.default_font_size;
-                        self.apply_font_size(ctx);
-                    }
-
-                    if ui.button("Close").clicked() {
-                        self.show_settings = false;
-                    }
-                });
-            if !open {
-                self.show_settings = false;
-            }
-        }
-    }
-    
-    fn apply_font_size(&self, ctx: &egui::Context) {
-        let mut style = (*ctx.style()).clone();
-
-        style.text_styles = [
-            (egui::TextStyle::Heading, egui::FontId::new(self.font_size + 6.0, egui::FontFamily::Proportional)),
-            (egui::TextStyle::Body, egui::FontId::new(self.font_size, egui::FontFamily::Proportional)),
-            (egui::TextStyle::Monospace, egui::FontId::new(self.font_size - 2.0, egui::FontFamily::Monospace)),
-            (egui::TextStyle::Button, egui::FontId::new(self.font_size, egui::FontFamily::Proportional)),
-            (egui::TextStyle::Small, egui::FontId::new(self.font_size - 4.0, egui::FontFamily::Proportional)),
-        ]
-        .into();
-
-        ctx.set_style(style);
     }
     
     pub fn show_add_new_note(&mut self, ctx: &egui::Context) { 
