@@ -19,3 +19,4 @@ serde = { version = "1.0.219", features = ["derive"] }
 toml = "0.8.22"
 rusqlite = { version = "0.35.0", features = ["bundled"] }
 chrono = "0.4.41"
+pulldown-cmark = "0.13.0"

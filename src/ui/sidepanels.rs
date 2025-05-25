@@ -1,6 +1,7 @@
 use eframe::egui::{self, Align, Layout};
 use log::{info};
 use crate::app::{App, SidebarTab};
+use crate::markdown::render_md;
 
 impl App {
     pub fn show_sidepanels(&mut self, ctx: &egui::Context) {
@@ -42,11 +43,8 @@ impl App {
                 .resizable(true)
                 .default_width(200.0)
                 .show(ctx, |ui| {
-                    if self.edited_content.is_empty() {
-                        ui.heading("Preview");
-                    } else {
-                        ui.label(self.edited_content.as_str());
-                    }
+                    render_md(ui, &self.edited_content);
+                    //ui.label(self.edited_content.as_str());
                 });
         }
 

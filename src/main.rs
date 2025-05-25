@@ -4,6 +4,7 @@ mod config;
 mod ui;
 mod db;
 mod metadata;
+mod markdown;
 use app::App;
 
 fn main() -> Result<(), eframe::Error> {
