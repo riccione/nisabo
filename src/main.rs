@@ -14,6 +14,10 @@ fn main() -> Result<(), eframe::Error> {
     eframe::run_native(
         metadata::APP_NAME,
         native_options,
-        Box::new(|cc| Ok(Box::new(App::new(cc))))
+        Box::new(|cc| {
+            // This gives us image support:
+            egui_extras::install_image_loaders(&cc.egui_ctx);
+            Ok(Box::new(App::new(cc)))
+        }),
     )
 }
