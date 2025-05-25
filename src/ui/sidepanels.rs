@@ -38,13 +38,12 @@ impl App {
                 }
             });
 
-        if self.state_is_right_panel_visible {
+        if self.state_is_right_panel_on {
             egui::SidePanel::right("right panel")
                 .resizable(true)
                 .default_width(200.0)
                 .show(ctx, |ui| {
                     render_md(ui, &self.edited_content);
-                    //ui.label(self.edited_content.as_str());
                 });
         }
 

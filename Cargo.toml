@@ -9,6 +9,12 @@ repository = "https://github.com/riccione/nisabo"
 documentation = "https://github.com/riccione/nisabo"
 license = "MIT"
 
+[profile.release]
+strip = true
+lto = true
+panic = "abort"
+opt-level = "z"
+
 [dependencies]
 dirs = "6.0.0"
 eframe = "0.31.1"
