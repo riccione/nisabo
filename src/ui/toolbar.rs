@@ -11,6 +11,8 @@ impl App {
             egui::include_image!("../../assets/plus-circle-1425-svgrepo-com.svg");
         const ICON_SAVE: egui::ImageSource<'_> = 
             egui::include_image!("../../assets/save-item-1411-svgrepo-com.svg");
+        const ICON_REFRESH: egui::ImageSource<'_> = 
+            egui::include_image!("../../assets/arrow-repeat-236-svgrepo-com.svg");
 
         egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
             let style = ui.style_mut();
@@ -40,6 +42,13 @@ impl App {
                 );
                 if save.clicked() {
                     let _ = self.try_update_note_content();
+                }
+                if ui.add_sized(
+                    [20.0, 20.0],
+                    egui::ImageButton::new(ICON_REFRESH)
+                        .tint(tint)
+                ).clicked() {
+                    self.load_rows = false;
                 }
                 toggle(ui, &mut self.state_is_right_panel_on);
             });

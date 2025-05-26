@@ -209,7 +209,7 @@ impl App {
                     // right btn
                     response.context_menu(|ui| {
                         if ui.button("Rename").clicked() {
-                            info!("Rename clicked");
+                            info!("Rename clicked with id: {id}");
                             self.rename_input = name.to_string();
                             self.selected_index = Some(id);
                             // show popup with name as input
