@@ -15,8 +15,12 @@ pub struct Note {
     pub deleted_at: Option<String>,
 }
 
+pub struct NoteIdName {
+    pub id: i32,
+    pub name: String,
+}
+
 impl Database {
-    
 
     pub fn new(path: &str) -> Result<Self> {
         let conn = Connection::open(path)?;
@@ -49,19 +53,19 @@ impl Database {
         Ok(())
     }
 
-    pub fn get_notes(&self) -> Result<Vec<(i32, String)>> {
-        let mut x = self.conn.prepare("SELECT id, name FROM note WHERE deleted_at is NULL")?;
+    pub fn get_notes(&self) -> Result<Vec<NoteIdName>, rusqlite::Error> {
+        let mut x = self.conn
+            .prepare("SELECT id, name FROM note WHERE deleted_at is NULL ORDER BY updated_at DESC")?;
         let rows = x.query_map([], |row| {
-            Ok((
-                row.get(0)?, 
-                row.get(1)?
-            ))
+            Ok(NoteIdName {
+                id: row.get(0)?, 
+                name: row.get(1)?,
+            })
         })?;
 
-        let names = rows.collect::<Result<Vec<_>,_>>()?;
-        Ok(names)
+        rows.collect()
     }
-
+    
     pub fn update_note_name(&self, id: i32, new_name: &str) -> Result<usize> {
         self.conn.execute(
             "UPDATE note SET name = ?1 WHERE id = ?2",

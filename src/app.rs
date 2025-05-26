@@ -168,9 +168,11 @@ impl App {
         if !self.load_rows {
             let db = crate::db::database::Database::new(&self.db_path)?;
             match db.get_notes() {
-                Ok(names) => {
-                    self.names = names;
-                    self.load_rows = true; // TODO: move it to state
+                Ok(notes) => {
+                    self.names = notes.into_iter()
+                        .map(|x| (x.id, x.name))
+                        .collect();
+                    self.load_rows = true; // TODO: move to state
                 }
                 Err(e) => {
                     error!("Error loading names from table archive: {e}");
@@ -183,11 +185,7 @@ impl App {
             ui.label("No notes found");
         } else {
             egui::ScrollArea::vertical().show(ui, |ui| {
-                // for borrow issues
-                let xs: Vec<(i32, String)> = self.names.iter()
-                    .map(|(id, name)| (*id, name.clone()))
-                    .collect();
-                for (id, name) in xs {
+                for (id, name) in self.names.clone() {
                     let selected = Some(&id) == self.selected_index.as_ref();
                     
                     let mut display_name = name.clone();
