@@ -12,7 +12,7 @@ pub struct Note {
     pub content: Option<String>,
     pub created_at: String,
     pub updated_at: String,
-    deleted_at: Option<String>,
+    pub deleted_at: Option<String>,
 }
 
 impl Database {

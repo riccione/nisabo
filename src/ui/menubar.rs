@@ -21,7 +21,7 @@ impl App {
                     ui.separator();
                     if ui.button("Export to *.md").clicked() {
                         info!("Export to md clicked");
-                        self.export(1);   
+                        let _ = self.export("md");   
                         ui.close_menu();
                     }
                     if ui.button("Export to *.html").clicked() {
