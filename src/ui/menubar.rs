@@ -10,6 +10,7 @@ impl App {
                 ui.menu_button("Archive", |ui| {
                     if ui.button("Create").clicked() {
                         info!("Create clicked");
+                        let _ = self.create_db();
                         ui.close_menu();
                     }
                     if ui.button("Open").clicked() {
@@ -17,6 +18,17 @@ impl App {
                         self.load_rows = false;
                         ui.close_menu();
                     }
+                    ui.separator();
+                    if ui.button("Export to *.md").clicked() {
+                        info!("Export to md clicked");
+                        self.export(1);   
+                        ui.close_menu();
+                    }
+                    if ui.button("Export to *.html").clicked() {
+                        info!("Export to html clicked");
+                        ui.close_menu();
+                    }
+                    ui.separator();
                     if ui.button("Settings").clicked() {
                         info!("Settings");
                         self.show_settings = true;

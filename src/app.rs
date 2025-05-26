@@ -123,6 +123,12 @@ impl App {
 
                     self.state_start = true;
                     self.db_path = path.to_string_lossy().into_owned();
+                    
+                    self.load_rows = false;
+                    // get rid of ghost data
+                    self.selected_index = None;
+                    self.original_content = String::new();
+                    self.edited_content = String::new();
                 } else {
                     self.db_error = Some("Path contains invalid UTF-8".to_string());
                 }
