@@ -20,25 +20,21 @@ impl App {
                 let db = crate::db::database::Database::new(&self.db_path)?;
                 let notes = db.get_all_notes()?;
                 
-                for note in notes {
-                    let safe_name = self.sanitize(&note.name);
-                    let file_path = full_path.join(format!("{safe_name}.md"));
+                    for note in notes {
+                        let safe_name = self.sanitize(&note.name);
+                        let file_path = full_path.join(format!("{safe_name}.md"));
 
-                    let mut file = File::create(&file_path)?;
-                    
-                    writeln!(file, "# {}", note.name)?;
-                    writeln!(file)?;
-                    writeln!(file, "{}", note.content.unwrap_or(String::from("")))?;
-                    writeln!(file)?;
-                    writeln!(file, "---")?;
-                    writeln!(file, "Created at {}", note.created_at)?;
-                    writeln!(file, "Updated at {}", note.updated_at)?;
-                    writeln!(file, "Deleted at {}", note.deleted_at.unwrap_or(String::from("NA")))?;
-                }
-                // 1. read all content from db
-                // 2. iterate over records and create md or html files in the selected dir
-
-                println!("{:?}", path);
+                        let mut file = File::create(&file_path)?;
+                        
+                        writeln!(file, "# {}", note.name)?;
+                        writeln!(file)?;
+                        writeln!(file, "{}", note.content.unwrap_or(String::from("")))?;
+                        writeln!(file)?;
+                        writeln!(file, "---")?;
+                        writeln!(file, "Created at {}", note.created_at)?;
+                        writeln!(file, "Updated at {}", note.updated_at)?;
+                        writeln!(file, "Deleted at {}", note.deleted_at.unwrap_or(String::from("NA")))?;
+                    }
                 }
         } else {
             error!("No directory selected");
