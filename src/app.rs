@@ -434,9 +434,10 @@ impl App {
     
     fn try_get_note(&mut self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
         let db = crate::db::database::Database::new(&self.db_path)?;
-        let (_, name, content) = db.get_note(id)?;
-        self.original_content = content.clone();
-        self.edited_content = content; 
+        let note = db.get_note(id)?;
+        self.original_content = note.content.clone()
+            .unwrap_or("".to_string());
+        self.edited_content = note.content.unwrap_or("".to_string()); 
         Ok(())
     }
     

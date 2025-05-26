@@ -8,10 +8,10 @@ pub struct Database {
 #[derive(Debug)]
 pub struct Note {
     id: i32,
-    name: String,
-    content: Option<String>,
-    created_at: String,
-    updated_at: String,
+    pub name: String,
+    pub content: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
     deleted_at: Option<String>,
 }
 
@@ -116,16 +116,20 @@ impl Database {
         )
     }
     
-    pub fn get_note(&self, id: i32) -> Result<(i32, String, String)> {
+    pub fn get_note(&self, id: i32) -> Result<Note> {
         self.conn.query_row(
-            "SELECT id, name, content FROM note WHERE id = ?1",
-            &[&id],
+            "SELECT * FROM note WHERE id = ?1",
+            [&id],
             |row| {
-                let id: i32 = row.get(0)?;
-                let name: String = row.get(1)?;
-                let content: String = row.get(2)?;
-                Ok((id, name, content))
-            }
+                Ok(Note {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                    content: row.get(2)?,
+                    created_at: row.get(3)?,
+                    updated_at: row.get(4)?,
+                    deleted_at: row.get(5)?,
+                })
+            },
         )
     }
     
