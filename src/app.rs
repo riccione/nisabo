@@ -38,6 +38,9 @@ pub struct App {
     pub edited_content: String,
     pub state_is_right_panel_on: bool,
     pub state_is_dark_mode: bool,
+    pub state_export_progress: Option<f32>,
+    pub state_exporting: bool,
+    pub export_rx: Option<std::sync::mpsc::Receiver<f32>>,
 }
 
 impl Default for SidebarTab {
@@ -74,6 +77,9 @@ impl App {
             edited_content: String::new(),
             state_is_right_panel_on: true,
             state_is_dark_mode: true,
+            state_export_progress: None,
+            state_exporting: false,
+            export_rx: None,
         }
     }
 

@@ -20,7 +20,6 @@ impl App {
                     }
                     ui.separator();
                     if ui.button("Export to *.md").clicked() {
-                        info!("Export to md clicked");
                         let _ = self.export("md");   
                         ui.close_menu();
                     }

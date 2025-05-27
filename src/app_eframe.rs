@@ -8,7 +8,7 @@ impl eframe::App for App {
 
         // apply theme
         ctx.set_visuals(if self.state_is_dark_mode {
-            println!("dark mode is on");
+            // println!("dark mode is on");
             egui::Visuals::dark()
         } else {
             egui::Visuals::light()
@@ -26,6 +26,30 @@ impl eframe::App for App {
             self.show_add_new_note(ctx);
         }
 
+        if let Some(rx) = &self.export_rx {
+            if let Ok(progress) = rx.try_recv() {
+                self.state_export_progress = Some(progress);
+                if progress >= 1.0 {
+                    self.state_exporting = false;
+                    self.export_rx = None;
+                }
+            }
+        }
+
+        if self.state_exporting {
+            println!("exporting");
+            egui::Window::new("Exporting notes..")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .show(ctx, |ui| {
+                    ui.label("Export in progress. Please wait..");
+                    if let Some(progress) = self.state_export_progress {
+                        ui.add(egui::ProgressBar::new(progress).show_percentage());
+                    }
+                });
+        }
+        
         if self.state_start {
             self.show_menubar(ctx);    
             // must be before sidepanels to reserve the space
