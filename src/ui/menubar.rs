@@ -19,14 +19,17 @@ impl App {
                         ui.close_menu();
                     }
                     ui.separator();
-                    if ui.button("Export to *.md").clicked() {
-                        let _ = self.export("md");   
-                        ui.close_menu();
-                    }
-                    if ui.button("Export to *.html").clicked() {
-                        info!("Export to html clicked");
-                        ui.close_menu();
-                    }
+                    ui.menu_button("Export", |ui| {
+                        if ui.button("Export to *.md").clicked() {
+                            let _ = self.export("md");   
+                            ui.close_menu();
+                        }
+                        if ui.button("Export to *.html").clicked() {
+                            info!("Export to html clicked");
+                            let _ = self.export("html");   
+                            ui.close_menu();
+                        }
+                    });
                     ui.separator();
                     if ui.button("Settings").clicked() {
                         info!("Settings");

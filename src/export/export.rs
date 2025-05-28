@@ -6,8 +6,7 @@ use std::io::Write;
 use std::error::Error;
 use log::{info, error};
 use crate::app::{App};
-//use std::time::Duration;
-//use std::thread;
+use pulldown_cmark::{Parser, Options, html};
 
 impl App {
     pub fn export(&mut self, target: &str) -> Result<(), Box<dyn Error>> {
@@ -28,15 +27,16 @@ impl App {
                 let full_path = Path::new(&path).join("exported");
                 fs::create_dir_all(&full_path)?;
                 println!("Dir created at: {:?}", full_path);
-                if target == "md" {
+                
                     let db = crate::db::database::Database::new(&self.db_path)?;
                     let notes = db.get_all_notes()?;
                     let total = notes.len().max(1); // prevent division by 0
+                    let format = target.to_string(); // to fix borrow issue
                     
                     std::thread::spawn(move || {                    
                         for (i, note) in notes.into_iter().enumerate() {
                             let safe_name = sanitize(&note.name);
-                            let file_path = full_path.join(format!("{safe_name}.md"));
+                            let file_path = full_path.join(format!("{safe_name}.{format}"));
 
                             let mut file = match File::create(&file_path) {
                                 Ok(f) => f,
@@ -45,23 +45,41 @@ impl App {
                                     return;
                                 }
                             };
+                           
+                            let data = format!(r#"---
+title: "{name}"
+
+date: {created}
+
+updated: {updated}
+
+deleted: {deleted}
+
+draft: false
+
+---
+
+{content}
+"#,
+                                name = note.name,
+                                content = &note.content.unwrap_or(String::from("")),
+                                created = note.created_at,
+                                updated = note.updated_at,
+                                deleted = note.deleted_at.unwrap_or("NA".to_string())
+                            );
                             
-                            if !write_line(&mut file, &format!("# {}", note.name)) {return; };
-                            if !write_line(&mut file, "") {return; };
-                            if !write_line(&mut file, &note.content.unwrap_or(String::from(""))) {return; };
-                            if !write_line(&mut file, "") {return; };
-                            if !write_line(&mut file, "---") {return; };
-                            if !write_line(&mut file, &format!("Created at {}", note.created_at)) {return; };
-                            if !write_line(&mut file, &format!("Updated at {}", note.updated_at)) {return; };
-                            if !write_line(&mut file, &format!("Deleted at {}", note.deleted_at
-                                                                     .unwrap_or("NA".to_string()))) {return; };
-                            
+                            let output = match format.as_str() {
+                                "html" => md_to_html(&data),
+                                _ => data,
+                            };
+                            match file.write_all(output.as_bytes()) {
+                                Ok(_) => info!("Html file saved: {safe_name}"),
+                                Err(e) => eprintln!("Failed to save {safe_name}: {e}"),
+                            }
                             // progress
-                            //thread::sleep(Duration::from_millis(300));
                             tx.send((i+1) as f32 / total as f32).ok();
                         }
                     });
-                }
         } else {
             error!("No directory selected");
         }
@@ -81,10 +99,13 @@ fn sanitize(s: &str) -> String {
     }
     x
 }
-fn write_line(file: &mut File, line: &str) -> bool {
-    if let Err(e) = writeln!(file, "{}", line) {
-        eprintln!("Failed to write to file: {e}");
-        return false;
-    }
-    true
+
+fn md_to_html(md: &str) -> String {
+    let options = Options::empty();
+
+    let parser = Parser::new_ext(md, options);
+
+    let mut html_output = String::new();
+    html::push_html(&mut html_output, parser);
+    html_output
 }
