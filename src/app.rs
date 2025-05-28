@@ -36,6 +36,7 @@ pub struct App {
     pub add_new_note_error: Option<String>,
     pub original_content: String,
     pub edited_content: String,
+    pub edited_note_id: Option<i32>,
     pub state_is_right_panel_on: bool,
     pub state_is_dark_mode: bool,
     pub state_export_progress: Option<f32>,
@@ -75,6 +76,7 @@ impl App {
             add_new_note_error: None,
             original_content: String::new(),
             edited_content: String::new(),
+            edited_note_id: None,
             state_is_right_panel_on: true,
             state_is_dark_mode: true,
             state_export_progress: None,
@@ -193,18 +195,23 @@ impl App {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for (id, name) in self.names.clone() {
                     let selected = Some(&id) == self.selected_index.as_ref();
-                    
-                    let mut display_name = name.clone();
 
+                    let mut display_name = name.clone();
+                   
+                    // unsaved note
                     if selected && self.edited_content != self.original_content {
                         let marker = "*";
-                        println!("Unsaved change!");
                         display_name = format!("{marker} {display_name}");
                     }
 
                     let response = ui.add(egui::SelectableLabel::new(selected, display_name));
                     
                     if response.clicked() {
+                        // auto-save
+                        if !selected && self.edited_content != self.original_content {
+                            let _ = self.try_auto_update_note_content();
+                        }
+
                         // clear content after previously selected note
                         self.edited_content = String::new();
                         self.selected_index = Some(id);
@@ -442,6 +449,7 @@ impl App {
         self.original_content = note.content.clone()
             .unwrap_or("".to_string());
         self.edited_content = note.content.unwrap_or("".to_string()); 
+        self.edited_note_id = Some(id);
         Ok(())
     }
     
@@ -452,6 +460,22 @@ impl App {
                 Ok(_) => {
                     println!("Saved successfully!");
                     self.original_content = self.edited_content.clone();
+                }
+                Err(e) => println!("Failed to save: {e}"),
+            } 
+        }
+        Ok(())
+    }
+
+    pub fn try_auto_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if self.edited_note_id.is_some() {
+            let db = crate::db::database::Database::new(&self.db_path)?;
+            match db.update_note_content(self.edited_note_id.unwrap(),  &self.edited_content) {
+                Ok(_) => {
+                    println!("Saved successfully!");
+                    self.original_content = String::new(); 
+                    self.edited_content = String::new();
+                    self.edited_note_id = None;
                 }
                 Err(e) => println!("Failed to save: {e}"),
             } 
