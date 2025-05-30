@@ -1,4 +1,4 @@
-use rusqlite::{Connection, params, Result};
+use rusqlite::{Connection, params, Transaction, Result};
 use chrono::Utc;
 
 pub struct Database {
@@ -27,6 +27,15 @@ impl Database {
         Ok(Database {conn})
     }
 
+    fn with_transaction<F, T>(&mut self, f: F) -> Result<T> 
+        where 
+            F: FnOnce(&Transaction) -> Result<T>, {
+                let tx = self.conn.transaction()?;
+                let result = f(&tx)?;
+                tx.commit()?;
+                Ok(result)
+    }
+
     pub fn configure_db(&self) -> Result<()> {
         self.conn.execute_batch("
             PRAGMA journal_mode = WAL;
@@ -40,32 +49,25 @@ impl Database {
         Ok(())
     }
 
-    pub fn init_tables(&self) -> Result<()> {
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS note (
+    pub fn init_tables(&mut self) -> Result<()> {
+        let r = self.with_transaction(|tx| {
+            tx.execute_batch("
+            CREATE TABLE IF NOT EXISTS note (
                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
                 name            TEXT NOT NULL,
                 content         TEXT,
                 created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
                 deleted_at      DATETIME
-                )",
-            (),
-        )?;
-        
-        // Add FTS5 virtual table
-        self.conn.execute(
-            "CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5 (
+            );
+
+            CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5 (
                 id UNINDEXED,
                 name,
                 content,
                 content='note',
-                )",
-            (),
-        )?;
-
-        // Add triggers for auto sync
-        self.conn.execute_batch("
+            );
+            
             CREATE TRIGGER IF NOT EXISTS note_ai AFTER INSERT ON note BEGIN
                 INSERT INTO note_fts(id, name, content)
                 VALUES (new.id, new.name, new.content);
@@ -84,22 +86,31 @@ impl Database {
                 INSERT INTO note_fts(note_fts, id, name, content) 
                 VALUES ('delete', old.id, old.name, old.content);
             END;
-        ")?;
+            ")?;
 
+
+            Ok(())
+        });
+        eprintln!("Create tables: {:?}", r);
+        
         // Insert dummy data
         let _ = self.insert_dummy_note();
 
         Ok(())
     }
 
-    fn insert_dummy_note(&self) -> Result<usize> {
-        self.conn.execute(
+    fn insert_dummy_note(&mut self) -> Result<()> {
+        let tx = self.conn.transaction()?;
+
+        tx.execute(
            "INSERT INTO note (
                 name, content, created_at, updated_at, deleted_at
             ) VALUES (?1, ?2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)
             ",
             ("README", "# Welcome to nisabo"),
-        )
+        )?;
+
+        tx.commit()
     }
 
     pub fn get_notes(&self) -> Result<Vec<NoteIdName>, rusqlite::Error> {

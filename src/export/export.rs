@@ -14,14 +14,13 @@ impl App {
             println!("call early exit");
             return Ok(()); // exporting in progress, only one can be run!
         }
-
-        let (tx, rx) = std::sync::mpsc::channel::<f32>();
-        self.export_rx = Some(rx);
-        self.state_exporting = true;
-        self.state_export_progress = Some(0.0);
         
         if let Some(path) = FileDialog::new()
             .pick_folder() {
+                let (tx, rx) = std::sync::mpsc::channel::<f32>();
+                self.export_rx = Some(rx);
+                self.state_exporting = true;
+                self.state_export_progress = Some(0.0);
                 
                 // create an empty dir 'exported'
                 let full_path = Path::new(&path).join("exported");

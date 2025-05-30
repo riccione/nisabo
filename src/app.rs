@@ -119,9 +119,9 @@ impl App {
                                              path));
             } else {
                 if let Some(path_str) = path.to_str() {
-                    let db = crate::db::database::Database::new(path_str)?;
-                    db.configure_db()?;
-                    db.init_tables()?;
+                    let mut db = crate::db::database::Database::new(path_str)?;
+                    let _ = db.configure_db()?;
+                    let _ = db.init_tables()?;
                     
                     let config = AppConfig {
                         last_archive_path: Some(path.clone()),
