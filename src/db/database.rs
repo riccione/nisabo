@@ -27,6 +27,19 @@ impl Database {
         Ok(Database {conn})
     }
 
+    pub fn configure_db(&self) -> Result<()> {
+        self.conn.execute_batch("
+            PRAGMA journal_mode = WAL;
+            PRAGMA synchronous = NORMAL;
+            PRAGMA cache_size = 10000;
+            PRAGMA temp_store = MEMORY;
+            PRAGMA case_sensitive_like = OFF;
+            PRAGMA foreign_keys = ON;
+        ")?;
+
+        Ok(())
+    }
+
     pub fn init_tables(&self) -> Result<()> {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS note (
@@ -40,17 +53,53 @@ impl Database {
             (),
         )?;
         
+        // Add FTS5 virtual table
+        self.conn.execute(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5 (
+                id UNINDEXED,
+                name,
+                content,
+                content='note',
+                )",
+            (),
+        )?;
+
+        // Add triggers for auto sync
+        self.conn.execute_batch("
+            CREATE TRIGGER IF NOT EXISTS note_ai AFTER INSERT ON note BEGIN
+                INSERT INTO note_fts(id, name, content)
+                VALUES (new.id, new.name, new.content);
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS note_au AFTER UPDATE ON note BEGIN
+                -- delete the old entry
+                INSERT INTO note_fts(note_fts, id, name, content) 
+                VALUES ('delete', old.id, old.name, old.content);
+                -- insert the new entry
+                INSERT INTO note_fts(id, name, content) 
+                VALUES (new.id, new.name, new.content);
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS note_ad AFTER DELETE ON note BEGIN
+                INSERT INTO note_fts(note_fts, id, name, content) 
+                VALUES ('delete', old.id, old.name, old.content);
+            END;
+        ")?;
+
+        // Insert dummy data
+        let _ = self.insert_dummy_note();
+
+        Ok(())
+    }
+
+    fn insert_dummy_note(&self) -> Result<usize> {
         self.conn.execute(
            "INSERT INTO note (
                 name, content, created_at, updated_at, deleted_at
             ) VALUES (?1, ?2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)
             ",
-            (
-                "README",
-                "# Welcome to nisabo",
-            ),
-        )?;
-        Ok(())
+            ("README", "# Welcome to nisabo"),
+        )
     }
 
     pub fn get_notes(&self) -> Result<Vec<NoteIdName>, rusqlite::Error> {
@@ -137,15 +186,18 @@ impl Database {
         )
     }
     
-    pub fn update_note_content(&self, id: i32, new_content: &str) -> Result<usize> {
+    pub fn update_note_content(&mut self, id: i32, new_content: &str) -> Result<usize> {
         let updated_at = Utc::now()
             .naive_utc()
             .format("%Y-%m-%d %H:%M:%S")
             .to_string();
-        self.conn.execute(
+        let tx = self.conn.transaction()?;
+        let ru = tx.execute(
             "UPDATE note SET content = ?1, updated_at = ?2 WHERE id = ?3",
             params![new_content, updated_at, id],
-        )
+        )?;
+        tx.commit()?;
+        Ok(ru)
     }
 
     pub fn get_all_notes(&self) -> Result<Vec<Note>> {

@@ -120,6 +120,7 @@ impl App {
             } else {
                 if let Some(path_str) = path.to_str() {
                     let db = crate::db::database::Database::new(path_str)?;
+                    db.configure_db()?;
                     db.init_tables()?;
                     
                     let config = AppConfig {
@@ -455,7 +456,7 @@ impl App {
     
     pub fn try_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(id) = self.selected_index {
-            let db = crate::db::database::Database::new(&self.db_path)?;
+            let mut db = crate::db::database::Database::new(&self.db_path)?;
             match db.update_note_content(id, &self.edited_content) {
                 Ok(_) => {
                     println!("Saved successfully!");
@@ -469,7 +470,7 @@ impl App {
 
     pub fn try_auto_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if self.edited_note_id.is_some() {
-            let db = crate::db::database::Database::new(&self.db_path)?;
+            let mut db = crate::db::database::Database::new(&self.db_path)?;
             match db.update_note_content(self.edited_note_id.unwrap(),  &self.edited_content) {
                 Ok(_) => {
                     println!("Saved successfully!");
