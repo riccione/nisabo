@@ -1,6 +1,6 @@
 use rusqlite::{Connection, params, Transaction, Result};
-use chrono::{NaiveDateTime, Utc};
 use crate::db::models::{Note, NoteIdName, NoteLink};
+use chrono::Utc;
 
 pub struct Database {
     conn: Connection,
