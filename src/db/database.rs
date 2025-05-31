@@ -1,23 +1,9 @@
-use rusqlite::{Connection, params, Result};
-use chrono::Utc;
+use rusqlite::{Connection, params, Transaction, Result};
+use chrono::{NaiveDateTime, Utc};
+use crate::db::models::{Note, NoteIdName, NoteLink};
 
 pub struct Database {
     conn: Connection,
-}
-
-#[derive(Debug)]
-pub struct Note {
-    id: i32,
-    pub name: String,
-    pub content: Option<String>,
-    pub created_at: String,
-    pub updated_at: String,
-    pub deleted_at: Option<String>,
-}
-
-pub struct NoteIdName {
-    pub id: i32,
-    pub name: String,
 }
 
 impl Database {
@@ -25,6 +11,15 @@ impl Database {
     pub fn new(path: &str) -> Result<Self> {
         let conn = Connection::open(path)?;
         Ok(Database {conn})
+    }
+
+    fn with_transaction<F, T>(&mut self, f: F) -> Result<T> 
+        where 
+            F: FnOnce(&Transaction) -> Result<T>, {
+                let tx = self.conn.transaction()?;
+                let result = f(&tx)?;
+                tx.commit()?;
+                Ok(result)
     }
 
     pub fn configure_db(&self) -> Result<()> {
@@ -40,32 +35,38 @@ impl Database {
         Ok(())
     }
 
-    pub fn init_tables(&self) -> Result<()> {
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS note (
+    pub fn init_tables(&mut self) -> Result<()> {
+        let r = self.with_transaction(|tx| {
+            tx.execute_batch("
+            CREATE TABLE IF NOT EXISTS note (
                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
                 name            TEXT NOT NULL,
                 content         TEXT,
                 created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
                 deleted_at      DATETIME
-                )",
-            (),
-        )?;
-        
-        // Add FTS5 virtual table
-        self.conn.execute(
-            "CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5 (
+            );
+
+            CREATE TABLE IF NOT EXISTS note_link (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_note_id  INTEGER NOT NULL,
+                target_note_id  INTEGER NOT NULL,
+                link_type       TEXT NOT NULL CHECK(link_type IN ('related', 'parent')),
+                created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+                deleted_at      DATETIME,
+                FOREIGN KEY (source_note_id) REFERENCES note(id) ON DELETE CASCADE,
+                FOREIGN KEY (target_note_id) REFERENCES note(id) ON DELETE CASCADE,
+                UNIQUE (source_note_id, target_note_id, link_type) -- prevents duplications
+            );
+
+            CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5 (
                 id UNINDEXED,
                 name,
                 content,
                 content='note',
-                )",
-            (),
-        )?;
-
-        // Add triggers for auto sync
-        self.conn.execute_batch("
+            );
+            
             CREATE TRIGGER IF NOT EXISTS note_ai AFTER INSERT ON note BEGIN
                 INSERT INTO note_fts(id, name, content)
                 VALUES (new.id, new.name, new.content);
@@ -84,22 +85,31 @@ impl Database {
                 INSERT INTO note_fts(note_fts, id, name, content) 
                 VALUES ('delete', old.id, old.name, old.content);
             END;
-        ")?;
+            ")?;
 
+
+            Ok(())
+        });
+        eprintln!("Create tables: {:?}", r);
+        
         // Insert dummy data
         let _ = self.insert_dummy_note();
 
         Ok(())
     }
 
-    fn insert_dummy_note(&self) -> Result<usize> {
-        self.conn.execute(
+    fn insert_dummy_note(&mut self) -> Result<()> {
+        let tx = self.conn.transaction()?;
+
+        tx.execute(
            "INSERT INTO note (
                 name, content, created_at, updated_at, deleted_at
             ) VALUES (?1, ?2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)
             ",
             ("README", "# Welcome to nisabo"),
-        )
+        )?;
+
+        tx.commit()
     }
 
     pub fn get_notes(&self) -> Result<Vec<NoteIdName>, rusqlite::Error> {
