@@ -400,7 +400,8 @@ impl App {
         self.state_trash_load = false;
         Ok(())
     }
-    
+   
+    /*
     pub fn show_add_new_note(&mut self, ctx: &egui::Context) { 
         if self.state_add_new_note {
             // tmp var
@@ -461,6 +462,7 @@ impl App {
         self.load_rows = false;
         Ok(())
     }
+    */
     
     fn try_get_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         let db = crate::db::database::Database::new(&self.db_path)?;

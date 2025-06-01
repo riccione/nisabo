@@ -5,3 +5,4 @@ pub mod sidepanels;
 pub mod statusbar;
 pub mod toggle_compact;
 pub mod settings;
+pub mod modal_add_new_note;
