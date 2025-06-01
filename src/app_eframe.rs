@@ -25,7 +25,7 @@ impl eframe::App for App {
         if self.state_add_new_note {
             self.show_add_new_note(ctx);
         }
-
+        
         if let Some(rx) = &self.export_rx {
             if let Ok(progress) = rx.try_recv() {
                 self.state_export_progress = Some(progress);

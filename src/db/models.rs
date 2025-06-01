@@ -2,7 +2,7 @@ use chrono::{NaiveDateTime, Utc};
 
 #[derive(Debug)]
 pub struct Note {
-    pub id: i32,
+    pub id: i64,
     pub name: String,
     pub content: Option<String>,
     pub created_at: String,
@@ -12,7 +12,7 @@ pub struct Note {
 
 #[derive(Debug)]
 pub struct NoteIdName {
-    pub id: i32,
+    pub id: i64,
     pub name: String,
 }
 
@@ -24,9 +24,9 @@ pub enum LinkType {
 
 #[derive(Debug)]
 pub struct NoteLink {
-    pub id: i32,
-    pub source_note_id: i32,
-    pub target_note_id: i32,
+    pub id: i64,
+    pub source_note_id: i64,
+    pub target_note_id: i64,
     pub link_type: LinkType, // parent or related
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
@@ -41,6 +41,15 @@ impl std::str::FromStr for LinkType {
             "related" => Ok(LinkType::Related),
             "parent" => Ok(LinkType::Parent),
             _ => Err(()),
+        }
+    }
+}
+
+impl ToString for LinkType {
+    fn to_string(&self) -> String {
+        match self {
+            LinkType::Related => "related".to_string(),
+            LinkType::Parent => "parent".to_string(),
         }
     }
 }

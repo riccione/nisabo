@@ -1,5 +1,5 @@
 use rusqlite::{Connection, params, Transaction, Result};
-use crate::db::models::{Note, NoteIdName, NoteLink};
+use crate::db::models::{LinkType, Note, NoteIdName, NoteLink};
 use chrono::Utc;
 
 pub struct Database {
@@ -125,14 +125,14 @@ impl Database {
         rows.collect()
     }
     
-    pub fn update_note_name(&self, id: i32, new_name: &str) -> Result<usize> {
+    pub fn update_note_name(&self, id: i64, new_name: &str) -> Result<usize> {
         self.conn.execute(
             "UPDATE note SET name = ?1 WHERE id = ?2",
             (new_name, id),
         )
     }
     
-    pub fn get_trash(&self) -> Result<Vec<(i32, String)>> {
+    pub fn get_trash(&self) -> Result<Vec<(i64, String)>> {
         let mut x = self.conn.prepare("SELECT id, name FROM note WHERE deleted_at IS NOT NULL")?;
         let rows = x.query_map([], |row| {
             Ok((
@@ -145,7 +145,7 @@ impl Database {
         Ok(xz)
     }
     
-    pub fn delete_note_soft(&self, id: i32) -> Result<usize> {
+    pub fn delete_note_soft(&self, id: i64) -> Result<usize> {
         let deleted_at = Utc::now()
             .naive_utc()
             .format("%Y-%m-%d %H:%M:%S")
@@ -156,30 +156,42 @@ impl Database {
         )
     }
     
-    pub fn delete_note_hard(&self, id: i32) -> Result<usize> {
+    pub fn delete_note_hard(&self, id: i64) -> Result<usize> {
         self.conn.execute(
             "DELETE FROM note WHERE id = ?1",
             &[&id],
         )
     }
     
-    pub fn restore_note(&self, id: i32) -> Result<usize> {
+    pub fn restore_note(&self, id: i64) -> Result<usize> {
         self.conn.execute(
             "UPDATE note SET deleted_at = NULL WHERE id = ?1",
             &[&id],
         )
     }
     
-    pub fn add_new_note(&self, name: &str) -> Result<usize> {
+    pub fn add_new_note(&self, name: &str) -> Result<i64> {
         self.conn.execute(
             "INSERT INTO note (
                 name, created_at, updated_at, deleted_at
             ) VALUES (?1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)",
             &[&name],
+        );
+        
+        let id = self.conn.last_insert_rowid();
+
+        Ok(id)
+    }
+    
+    pub fn add_note_link(&self, source_note_id: i64, target_note_id: i64, link_type: LinkType) -> Result<usize> {
+        self.conn.execute(
+            "INSERT INTO note_link (source_note_id, target_note_id, link_type) 
+            VALUES (?1, ?2, ?3)",
+            params![source_note_id, target_note_id, link_type.to_string()],
         )
     }
     
-    pub fn get_note(&self, id: i32) -> Result<Note> {
+    pub fn get_note(&self, id: i64) -> Result<Note> {
         self.conn.query_row(
             "SELECT * FROM note WHERE id = ?1",
             [&id],
@@ -196,7 +208,7 @@ impl Database {
         )
     }
     
-    pub fn update_note_content(&mut self, id: i32, new_content: &str) -> Result<usize> {
+    pub fn update_note_content(&mut self, id: i64, new_content: &str) -> Result<usize> {
         let updated_at = Utc::now()
             .naive_utc()
             .format("%Y-%m-%d %H:%M:%S")

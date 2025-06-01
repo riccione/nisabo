@@ -4,6 +4,7 @@ use eframe::egui;
 use log::{info, error};
 use crate::config::AppConfig;
 use std::error::Error;
+use crate::db::models::{LinkType};
 
 #[derive(PartialEq)]
 pub enum SidebarTab {
@@ -21,10 +22,10 @@ pub struct App {
     pub rename_error: Option<String>,
     pub db_error: Option<String>,
     pub load_rows: bool, // trigger loading
-    pub names: Vec<(i32, String)>,
-    pub notes_deleted: Vec<(i32, String)>,
+    pub names: Vec<(i64, String)>,
+    pub notes_deleted: Vec<(i64, String)>,
     pub state_trash_load: bool, // trigger loading
-    pub selected_index: Option<i32>,
+    pub selected_index: Option<i64>,
     pub state_start: bool,
     pub selected_tab: SidebarTab,
     pub show_settings: bool,
@@ -32,11 +33,12 @@ pub struct App {
     pub default_font_size: f32,
     pub config: AppConfig,
     pub state_add_new_note: bool,
+    pub parent_note_id: Option<i64>,
     pub add_new_note_input: String,
     pub add_new_note_error: Option<String>,
     pub original_content: String,
     pub edited_content: String,
-    pub edited_note_id: Option<i32>,
+    pub edited_note_id: Option<i64>,
     pub state_is_right_panel_on: bool,
     pub state_is_dark_mode: bool,
     pub state_export_progress: Option<f32>,
@@ -61,8 +63,8 @@ impl App {
             rename_error: None,
             db_error: None,
             load_rows: false,
-            names: Vec::<(i32, String)>::new(),
-            notes_deleted: Vec::<(i32, String)>::new(),
+            names: Vec::<(i64, String)>::new(),
+            notes_deleted: Vec::<(i64, String)>::new(),
             state_trash_load: false,
             selected_index: None,
             state_start: false,
@@ -72,6 +74,7 @@ impl App {
             default_font_size: 13.0,
             config: AppConfig::load_config(),
             state_add_new_note: false,
+            parent_note_id: None,
             add_new_note_input: String::new(),
             add_new_note_error: None,
             original_content: String::new(),
@@ -222,6 +225,14 @@ impl App {
 
                     // right btn
                     response.context_menu(|ui| {
+                        // add a child note, selected note is parent
+                        if ui.button("Add note").clicked() {
+                            self.state_add_new_note = true;
+                            // parent id
+                            self.parent_note_id = Some(id);
+                            ui.close_menu();
+                        }
+
                         if ui.button("Rename").clicked() {
                             info!("Rename clicked with id: {id}");
                             self.rename_input = name.to_string();
@@ -266,7 +277,7 @@ impl App {
         } else {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 // for borrow issues
-                let xs: Vec<(i32, String)> = self.notes_deleted.iter()
+                let xs: Vec<(i64, String)> = self.notes_deleted.iter()
                     .map(|(id, name)| (*id, name.clone()))
                     .collect();
                 for (id, name) in xs {
@@ -357,7 +368,7 @@ impl App {
         Ok(())
     }
     
-    fn try_delete_note(&mut self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+    fn try_delete_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         println!("id: {:?}", id);
         let db = crate::db::database::Database::new(&self.db_path)?;
         let _ = db.delete_note_soft(id);
@@ -368,7 +379,7 @@ impl App {
         Ok(())
     }
     
-    fn try_restore_note(&mut self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+    fn try_restore_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         println!("id: {:?}", id);
         let db = crate::db::database::Database::new(&self.db_path)?;
         let _ = db.restore_note(id);
@@ -379,7 +390,7 @@ impl App {
         Ok(())
     }
     
-    fn try_permanently_delete(&mut self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+    fn try_permanently_delete(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         println!("id: {:?}", id);
         let db = crate::db::database::Database::new(&self.db_path)?;
         let _ = db.delete_note_hard(id);
@@ -418,6 +429,7 @@ impl App {
                   
                         if ui.button("Cancel").clicked() {
                             info!("Cancel clicked");
+                            self.parent_note_id = None;
                             self.state_add_new_note = false;
                             self.add_new_note_input.clear();
                             self.add_new_note_error = None;
@@ -425,6 +437,7 @@ impl App {
                     });
                 });
             if !open {
+                self.parent_note_id = None;
                 self.state_add_new_note = false;
                 self.add_new_note_input.clear();
                 self.add_new_note_error = None;
@@ -434,8 +447,13 @@ impl App {
     
     fn try_add_new_note(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let db = crate::db::database::Database::new(&self.db_path)?;
-        let _ = db.add_new_note(&self.add_new_note_input);
+        let target_id = db.add_new_note(&self.add_new_note_input)?;
 
+        if let Some(pid) = self.parent_note_id {
+            let _ = db.add_note_link(pid, target_id, LinkType::Parent);
+        }
+
+        self.parent_note_id = None;
         self.state_add_new_note = false;
         self.add_new_note_input.clear();
         self.add_new_note_error = None;
@@ -444,7 +462,7 @@ impl App {
         Ok(())
     }
     
-    fn try_get_note(&mut self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+    fn try_get_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         let db = crate::db::database::Database::new(&self.db_path)?;
         let note = db.get_note(id)?;
         self.original_content = note.content.clone()
