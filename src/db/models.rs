@@ -10,10 +10,12 @@ pub struct Note {
     pub deleted_at: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NoteIdName {
     pub id: i64,
     pub name: String,
+    pub children: Vec<NoteIdName>,
+    pub has_parent: bool,
 }
 
 #[derive(Debug)]
@@ -31,6 +33,12 @@ pub struct NoteLink {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
+}
+
+#[derive(Debug)]
+pub struct NoteLinkIds {
+    pub source_note_id: i64,
+    pub target_note_id: i64,
 }
 
 impl std::str::FromStr for LinkType {

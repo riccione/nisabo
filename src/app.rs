@@ -1,10 +1,10 @@
 use std::path::{PathBuf};
 use rfd::FileDialog;
-use eframe::egui;
+use eframe::egui::{self, Rgba};
 use log::{info, error};
 use crate::config::AppConfig;
 use std::error::Error;
-use crate::db::models::{LinkType};
+use crate::db::models::{LinkType, NoteIdName};
 
 #[derive(PartialEq)]
 pub enum SidebarTab {
@@ -44,6 +44,7 @@ pub struct App {
     pub state_export_progress: Option<f32>,
     pub state_exporting: bool,
     pub export_rx: Option<std::sync::mpsc::Receiver<f32>>,
+    pub names1: Vec<NoteIdName>,
 }
 
 impl Default for SidebarTab {
@@ -85,6 +86,7 @@ impl App {
             state_export_progress: None,
             state_exporting: false,
             export_rx: None,
+            names1: Vec::<NoteIdName>::new(),
         }
     }
 
@@ -173,7 +175,8 @@ impl App {
             error!("No db file selected");
         }
     }
-   
+  
+
     // TODO: rename and refactor, same for trash
     pub fn show_db_ls(&mut self, ui: &mut egui::Ui) 
         -> Result<(), Box<dyn Error>> {
@@ -181,9 +184,12 @@ impl App {
             let db = crate::db::database::Database::new(&self.db_path)?;
             match db.get_notes() {
                 Ok(notes) => {
+                    self.names1 = notes;
+                    /*
                     self.names = notes.into_iter()
                         .map(|x| (x.id, x.name))
                         .collect();
+                    */
                     self.load_rows = true; // TODO: move to state
                 }
                 Err(e) => {
@@ -193,10 +199,12 @@ impl App {
             }
         }
 
-        if self.names.is_empty() {
+        if self.names1.is_empty() {
             ui.label("No notes found");
         } else {
             egui::ScrollArea::vertical().show(ui, |ui| {
+                self.draw_note_tree(ui);
+                /*
                 for (id, name) in self.names.clone() {
                     let selected = Some(&id) == self.selected_index.as_ref();
 
@@ -251,6 +259,7 @@ impl App {
                         }
                     });
                 }
+                */
             });
         }
         Ok(()) 
@@ -467,6 +476,7 @@ impl App {
     fn try_get_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         let db = crate::db::database::Database::new(&self.db_path)?;
         let note = db.get_note(id)?;
+        println!("{:?}", note);
         self.original_content = note.content.clone()
             .unwrap_or("".to_string());
         self.edited_content = note.content.unwrap_or("".to_string()); 
@@ -502,5 +512,102 @@ impl App {
             } 
         }
         Ok(())
+    }
+
+    fn draw_note_tree(&mut self, ui: &mut egui::Ui) {
+        //println!("{:?}", notes);
+        for note in &self.names1.clone() {
+            self.draw_note(ui, note);
+        }
+    }
+
+    fn draw_note(&mut self, ui: &mut egui::Ui, note: &NoteIdName) {
+        let is_selected = Some(note.id) == self.selected_index;
+        let display_name = if is_selected && self.edited_content != self.original_content {
+            format!("* {}", note.name)
+        } else {
+            note.name.clone()
+        };
+
+        if note.children.is_empty() {
+            let response = ui.add(egui::SelectableLabel::new(is_selected, &display_name));
+            if response.clicked() {
+                //self.selected_index = Some(note.id);
+                //println!("Note selected: {}", note.id);
+                // auto-save
+                if !is_selected && self.edited_content != self.original_content {
+                    let _ = self.try_auto_update_note_content();
+                }
+
+                // clear content after previously selected note
+                self.edited_content = String::new();
+                
+                self.selected_index = Some(note.id);
+                println!("note id {:?}", note.id);
+                let _ = self.try_get_note(note.id);
+            }
+            // right btn
+            response.context_menu(|ui| {
+                if !note.has_parent {
+                    // add a child note, selected note is parent
+                    if ui.button("Add note").clicked() {
+                        self.state_add_new_note = true;
+                        // parent id
+                        self.parent_note_id = Some(note.id);
+                        ui.close_menu();
+                    }
+                }
+
+                if ui.button("Rename").clicked() {
+                    info!("Rename clicked with id: {}", note.id);
+                    self.rename_input = note.name.to_string();
+                    self.selected_index = Some(note.id);
+                    // show popup with name as input
+                    self.state_rename = true;
+                    ui.close_menu();
+                }
+
+                if ui.button("Delete").clicked() {
+                    info!("Delete clicked");
+                    let _ = self.try_delete_note(note.id);
+                    self.original_content = String::new();
+                    self.edited_content = String::new();
+                    ui.close_menu();
+                }
+            });
+        } else {
+            let header = egui::CollapsingHeader::new(&display_name)
+                .default_open(false);
+
+            let response = header.show(ui, |ui| {
+                    for child in &note.children {
+                        self.draw_note(ui, child);
+                    }
+            });
+
+            if is_selected {
+                let rect = response.header_response.rect;
+                let mut color: Rgba = ui.visuals().selection.bg_fill.into();
+                color = Rgba::from_rgba_unmultiplied(color.r(), color.g(), color.b(), 0.3);
+                ui.painter().rect_filled(rect, 0.0, color);
+            }
+
+            if response.header_response.clicked() {
+                //self.selected_index = Some(note.id);
+                println!("Note selected: {}", note.id);
+                // auto-save
+                if !is_selected && self.edited_content != self.original_content {
+                    let _ = self.try_auto_update_note_content();
+                }
+
+                // clear content after previously selected note
+                self.edited_content = String::new();
+                
+                self.selected_index = Some(note.id);
+                println!("note id {:?}", note.id);
+                let _ = self.try_get_note(note.id);
+            }
+
+        }
     }
 }

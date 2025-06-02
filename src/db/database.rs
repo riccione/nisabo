@@ -1,5 +1,5 @@
 use rusqlite::{Connection, params, Transaction, Result};
-use crate::db::models::{LinkType, Note, NoteIdName, NoteLink};
+use crate::db::models::{LinkType, Note, NoteIdName, NoteLink, NoteLinkIds};
 use chrono::Utc;
 
 pub struct Database {
@@ -115,6 +115,56 @@ impl Database {
     pub fn get_notes(&self) -> Result<Vec<NoteIdName>, rusqlite::Error> {
         let mut x = self.conn
             .prepare("SELECT id, name FROM note WHERE deleted_at is NULL ORDER BY updated_at DESC")?;
+        let note_iter = x.query_map([], |row| {
+            Ok(NoteIdName {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                children: vec![],
+                has_parent: false,
+            })
+        })?;
+
+        let mut notes = std::collections::HashMap::new();
+        let mut ordered_notes: Vec<i64> = Vec::new();
+
+        for xs in note_iter {
+            let note = xs?;
+            let note_id = note.id; // to resolve moved value for ordered_notes
+            notes.insert(note.id, note);
+            ordered_notes.push(note_id);
+        }
+
+        let mut link_stmt = self.conn.prepare("
+            SELECT source_note_id, target_note_id FROM note_link 
+            WHERE link_type = 'parent'")?;
+
+        let link_iter = link_stmt.query_map([], |row| {
+            Ok(NoteLinkIds {
+                source_note_id: row.get(0)?,
+                target_note_id: row.get(1)?
+            })
+        })?;
+
+        for xs in link_iter {
+            let link =  xs?;
+            let parent_id = link.source_note_id;
+            let child_id = link.target_note_id;
+
+            if let Some(mut child) = notes.remove(&child_id) {
+                child.has_parent = true;
+                if let Some(parent) = notes.get_mut(&parent_id) {
+                    parent.children.push(child);
+                }
+            }
+        }
+        let top_level_notes: Vec<NoteIdName> = ordered_notes
+            .into_iter()
+            .filter_map(|id| notes.remove(&id))
+            .collect();
+        //Ok(notes.into_values().collect())
+        //
+        Ok(top_level_notes)
+        /*
         let rows = x.query_map([], |row| {
             Ok(NoteIdName {
                 id: row.get(0)?, 
@@ -123,6 +173,7 @@ impl Database {
         })?;
 
         rows.collect()
+        */
     }
     
     pub fn update_note_name(&self, id: i64, new_name: &str) -> Result<usize> {
