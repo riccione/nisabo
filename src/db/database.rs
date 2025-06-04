@@ -195,8 +195,16 @@ impl Database {
         let xz = rows.collect::<Result<Vec<_>,_>>()?;
         Ok(xz)
     }
-    
-    pub fn delete_note_soft(&self, id: i64) -> Result<usize> {
+   
+    pub fn delete_note_and_children_soft(&self, id: i64) -> Result<()> {
+        self.delete_note_soft(id)?;
+        self.delete_note_link_soft(id)?;
+
+        Ok(())
+    }
+
+    fn delete_note_soft(&self, id: i64) -> Result<usize> {
+        // need to think about naive_utc vs CURRENT_TIMESTAMP
         let deleted_at = Utc::now()
             .naive_utc()
             .format("%Y-%m-%d %H:%M:%S")
@@ -204,6 +212,18 @@ impl Database {
         self.conn.execute(
             "UPDATE note SET deleted_at = ?1 WHERE id = ?2",
             (deleted_at, id),
+        )
+    }
+    
+    fn delete_note_link_soft(&self, id: i64) -> Result<usize> {
+        self.conn.execute(
+            "UPDATE note SET deleted_at = CURRENT_TIMESTAMP 
+            WHERE id IN (
+                SELECT target_note_id
+                FROM note_link
+                WHERE source_note_id = ?1 AND link_type = ?2
+            )",
+            params![id, LinkType::Parent.to_string()],
         )
     }
     
