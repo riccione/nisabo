@@ -316,8 +316,11 @@ impl App {
     
     fn try_delete_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         println!("id: {:?}", id);
-        let db = crate::db::database::Database::new(&self.db_path)?;
-        let _ = db.delete_note_and_children_soft(id);
+        let mut db = crate::db::database::Database::new(&self.db_path)?;
+        match db.delete_note_and_children_soft(id) {
+            Ok(()) => info!("Note deleted"),
+            Err(e) => eprintln!("Error deleting note: {:?}", e),
+        }
 
         // refresh ui
         self.load_rows = false;

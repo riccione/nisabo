@@ -99,17 +99,18 @@ impl Database {
     }
 
     fn insert_dummy_note(&mut self) -> Result<()> {
-        let tx = self.conn.transaction()?;
-
-        tx.execute(
-           "INSERT INTO note (
+        self.with_transaction(|tx| {
+            tx.execute("
+            INSERT INTO note (
                 name, content, created_at, updated_at, deleted_at
             ) VALUES (?1, ?2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)
             ",
             ("README", "# Welcome to nisabo"),
-        )?;
+            )?;
 
-        tx.commit()
+            Ok(())
+        });
+        Ok(())
     }
 
     pub fn get_notes(&self) -> Result<Vec<NoteIdName>, rusqlite::Error> {
@@ -196,26 +197,45 @@ impl Database {
         Ok(xz)
     }
    
-    pub fn delete_note_and_children_soft(&self, id: i64) -> Result<()> {
+    pub fn delete_note_and_children_soft(&mut self, id: i64) -> Result<()> {
         self.delete_note_soft(id)?;
         self.delete_note_link_soft(id)?;
 
         Ok(())
     }
 
-    fn delete_note_soft(&self, id: i64) -> Result<usize> {
-        // need to think about naive_utc vs CURRENT_TIMESTAMP
-        let deleted_at = Utc::now()
-            .naive_utc()
-            .format("%Y-%m-%d %H:%M:%S")
-            .to_string();
+    fn delete_note_soft(&mut self, id: i64) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.execute(
+                "UPDATE note SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?1",
+                &[&id],
+            )?;
+            Ok(())
+        });
+        Ok(())
+        /*
         self.conn.execute(
             "UPDATE note SET deleted_at = ?1 WHERE id = ?2",
             (deleted_at, id),
         )
+        */
     }
     
-    fn delete_note_link_soft(&self, id: i64) -> Result<usize> {
+    fn delete_note_link_soft(&mut self, id: i64) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.execute(
+                "UPDATE note SET deleted_at = CURRENT_TIMESTAMP 
+                WHERE id IN (
+                    SELECT target_note_id
+                    FROM note_link
+                    WHERE source_note_id = ?1 AND link_type = ?2
+                )",
+                params![id, LinkType::Parent.to_string()],
+            )?;
+            Ok(())
+        });
+        Ok(())
+        /*
         self.conn.execute(
             "UPDATE note SET deleted_at = CURRENT_TIMESTAMP 
             WHERE id IN (
@@ -225,6 +245,7 @@ impl Database {
             )",
             params![id, LinkType::Parent.to_string()],
         )
+        */
     }
     
     pub fn delete_note_hard(&self, id: i64) -> Result<usize> {
