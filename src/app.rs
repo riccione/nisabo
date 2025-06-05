@@ -256,6 +256,7 @@ impl App {
         Ok(()) 
     }
 
+    /*
     pub fn show_rename(&mut self, ctx: &egui::Context) { 
         if self.state_rename {
             // tmp var
@@ -313,6 +314,7 @@ impl App {
         self.load_rows = false;
         Ok(())
     }
+    */
     
     fn try_delete_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         println!("id: {:?}", id);
