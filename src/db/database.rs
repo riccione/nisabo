@@ -109,8 +109,7 @@ impl Database {
             )?;
 
             Ok(())
-        });
-        Ok(())
+        })
     }
 
     pub fn get_notes(&self) -> Result<Vec<NoteIdName>, rusqlite::Error> {
@@ -162,19 +161,7 @@ impl Database {
             .into_iter()
             .filter_map(|id| notes.remove(&id))
             .collect();
-        //Ok(notes.into_values().collect())
-        //
         Ok(top_level_notes)
-        /*
-        let rows = x.query_map([], |row| {
-            Ok(NoteIdName {
-                id: row.get(0)?, 
-                name: row.get(1)?,
-            })
-        })?;
-
-        rows.collect()
-        */
     }
     
     pub fn update_note_name(&self, id: i64, new_name: &str) -> Result<usize> {
@@ -211,14 +198,7 @@ impl Database {
                 &[&id],
             )?;
             Ok(())
-        });
-        Ok(())
-        /*
-        self.conn.execute(
-            "UPDATE note SET deleted_at = ?1 WHERE id = ?2",
-            (deleted_at, id),
-        )
-        */
+        })
     }
     
     fn delete_note_link_soft(&mut self, id: i64) -> Result<()> {
@@ -233,19 +213,7 @@ impl Database {
                 params![id, LinkType::Parent.to_string()],
             )?;
             Ok(())
-        });
-        Ok(())
-        /*
-        self.conn.execute(
-            "UPDATE note SET deleted_at = CURRENT_TIMESTAMP 
-            WHERE id IN (
-                SELECT target_note_id
-                FROM note_link
-                WHERE source_note_id = ?1 AND link_type = ?2
-            )",
-            params![id, LinkType::Parent.to_string()],
-        )
-        */
+        })
     }
     
     pub fn delete_note_hard(&self, id: i64) -> Result<usize> {
