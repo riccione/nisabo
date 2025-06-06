@@ -30,7 +30,8 @@ impl App {
                 // Tab content
                 match self.selected_tab {
                     SidebarTab::Notes => {
-                        let _ = self.show_db_ls(ui);
+                        //let _ = self.show_db_ls(ui);
+                        let _ = self.show_notes(ui);
                     },
                     SidebarTab::Trash => {
                         let _ = self.show_trash(ui);

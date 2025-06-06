@@ -177,7 +177,7 @@ impl App {
         }
     }
   
-
+    /*
     // TODO: rename and refactor, same for trash
     pub fn show_db_ls(&mut self, ui: &mut egui::Ui) 
         -> Result<(), Box<dyn Error>> {
@@ -204,6 +204,7 @@ impl App {
         }
         Ok(()) 
     }
+    */
     
     pub fn show_trash(&mut self, ui: &mut egui::Ui) 
         -> Result<(), Box<dyn Error>> {
@@ -236,6 +237,7 @@ impl App {
 
                     if response.clicked() {
                         self.selected_index = Some(id);
+                        // let _ = self.try_get_note(note.id);
                         println!("Trash note clicked {:?}", self.selected_index);
                     }
 
@@ -259,6 +261,7 @@ impl App {
         Ok(()) 
     }
 
+    /*
     fn try_delete_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         println!("id: {:?}", id);
         let mut db = crate::db::database::Database::new(&self.db_path)?;
@@ -272,6 +275,7 @@ impl App {
         self.state_trash_load = false;
         Ok(())
     }
+    */
     
     fn try_restore_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         println!("id: {:?}", id);
@@ -294,7 +298,8 @@ impl App {
         self.state_trash_load = false;
         Ok(())
     }
-   
+  
+    /*
     fn try_get_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         let db = crate::db::database::Database::new(&self.db_path)?;
         let note = db.get_note(id)?;
@@ -305,6 +310,7 @@ impl App {
         self.edited_note_id = Some(id);
         Ok(())
     }
+    */
     
     pub fn try_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(id) = self.selected_index {
@@ -336,6 +342,7 @@ impl App {
         Ok(())
     }
 
+    /*
     fn draw_note_tree(&mut self, ui: &mut egui::Ui) {
         //println!("{:?}", notes);
         for note in &self.names.clone() {
@@ -459,4 +466,5 @@ impl App {
             });
         }
     }
+*/
 }
