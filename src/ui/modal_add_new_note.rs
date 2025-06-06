@@ -49,7 +49,7 @@ impl App {
     }
     
     fn try_add_new_note(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let db = crate::db::database::Database::new(&self.db_path)?;
+        let mut db = crate::db::database::Database::new(&self.db_path)?;
         let target_id = db.add_new_note(&self.add_new_note_input)?;
 
         if let Some(pid) = self.parent_note_id {

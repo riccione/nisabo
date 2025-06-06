@@ -1,6 +1,5 @@
 use rusqlite::{Connection, params, Transaction, Result};
 use crate::db::models::{LinkType, Note, NoteIdName, NoteLink, NoteLinkIds};
-use chrono::Utc;
 
 pub struct Database {
     conn: Connection,
@@ -251,7 +250,18 @@ impl Database {
         */
     }
     
-    pub fn add_new_note(&self, name: &str) -> Result<i64> {
+    pub fn add_new_note(&mut self, name: &str) -> Result<i64> {
+        self.with_transaction(|tx| {
+            tx.execute(
+                "INSERT INTO note (name, created_at, updated_at, deleted_at) 
+                VALUES (?1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)",
+                &[&name],
+            )?;
+
+            let id = tx.last_insert_rowid();
+            Ok(id)
+        })
+        /*
         self.conn.execute(
             "INSERT INTO note (
                 name, created_at, updated_at, deleted_at
@@ -262,14 +272,26 @@ impl Database {
         let id = self.conn.last_insert_rowid();
 
         Ok(id)
+        */
     }
     
-    pub fn add_note_link(&self, source_note_id: i64, target_note_id: i64, link_type: LinkType) -> Result<usize> {
+    pub fn add_note_link(&mut self, source_note_id: i64, target_note_id: i64, link_type: LinkType) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.execute(
+                "INSERT INTO note_link (source_note_id, target_note_id, link_type) 
+                VALUES (?1, ?2, ?3)",
+                params![source_note_id, target_note_id, link_type.to_string()],
+            )?;
+
+            Ok(())
+        })
+        /*
         self.conn.execute(
             "INSERT INTO note_link (source_note_id, target_note_id, link_type) 
             VALUES (?1, ?2, ?3)",
             params![source_note_id, target_note_id, link_type.to_string()],
         )
+        */
     }
     
     pub fn get_note(&self, id: i64) -> Result<Note> {
@@ -289,18 +311,23 @@ impl Database {
         )
     }
     
-    pub fn update_note_content(&mut self, id: i64, new_content: &str) -> Result<usize> {
-        let updated_at = Utc::now()
-            .naive_utc()
-            .format("%Y-%m-%d %H:%M:%S")
-            .to_string();
+    pub fn update_note_content(&mut self, id: i64, new_content: &str) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.execute(
+                "UPDATE note SET content = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2",
+                params![new_content, id],
+            )?;
+            Ok(())
+        })
+        /*
         let tx = self.conn.transaction()?;
         let ru = tx.execute(
-            "UPDATE note SET content = ?1, updated_at = ?2 WHERE id = ?3",
-            params![new_content, updated_at, id],
+            "UPDATE note SET content = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2",
+            params![new_content, id],
         )?;
         tx.commit()?;
         Ok(ru)
+        */
     }
 
     pub fn get_all_notes(&self) -> Result<Vec<Note>> {
