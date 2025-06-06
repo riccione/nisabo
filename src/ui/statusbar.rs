@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::egui::{self, Color32, RichText};
 use crate::app::{App};
 
 impl App {
@@ -8,10 +8,13 @@ impl App {
                 ui.label(&self.db_path);
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.label(&self.status_error);
+                    ui.label(
+                        RichText::new(&self.status_error)
+                            .color(Color32::from_rgb(200,0,0))
+                            .strong()
+                    );
                 });
             });
         });
     }
 }
-
