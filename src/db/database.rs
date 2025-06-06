@@ -164,11 +164,14 @@ impl Database {
         Ok(top_level_notes)
     }
     
-    pub fn update_note_name(&self, id: i64, new_name: &str) -> Result<usize> {
-        self.conn.execute(
-            "UPDATE note SET name = ?1 WHERE id = ?2",
-            (new_name, id),
-        )
+    pub fn update_note_name(&mut self, id: i64, new_name: &str) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.execute(
+                "UPDATE note SET name = ?1 WHERE id = ?2",
+                (new_name, id),
+            )?;
+            Ok(())
+        })
     }
     
     pub fn get_trash(&self) -> Result<Vec<(i64, String)>> {

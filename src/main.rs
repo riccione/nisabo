@@ -6,6 +6,7 @@ mod db;
 mod metadata;
 mod markdown;
 mod export;
+mod constants;
 use app::App;
 
 fn main() -> Result<(), eframe::Error> {

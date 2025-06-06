@@ -5,6 +5,7 @@ use log::{info, error};
 use crate::config::AppConfig;
 use std::error::Error;
 use crate::db::models::{LinkType, NoteIdName};
+use crate::constants::RESULT_SUCCESS;
 
 #[derive(PartialEq)]
 pub enum SidebarTab {
@@ -262,7 +263,7 @@ impl App {
         println!("id: {:?}", id);
         let mut db = crate::db::database::Database::new(&self.db_path)?;
         self.status_error = match db.delete_note_and_children_soft(id) {
-            Ok(()) => String::from("Ok"),
+            Ok(()) => String::from(RESULT_SUCCESS),
             Err(e) => format!("Error deleting note: {:?}", e),
         };
 

@@ -1,6 +1,7 @@
 use eframe::egui::{self};
 use log::{info, error};
 use crate::app::{App};
+use crate::constants::RESULT_SUCCESS;
 
 impl App {
     pub fn show_rename(&mut self, ctx: &egui::Context) { 
@@ -48,9 +49,13 @@ impl App {
     }
 
     fn try_rename_note(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let db = crate::db::database::Database::new(&self.db_path)?;
-        println!("{:?}", self.selected_index);
-        let _ = db.update_note_name(self.selected_index.unwrap(), &self.rename_input);
+        let mut db = crate::db::database::Database::new(&self.db_path)?;
+        self.status_error = match db.update_note_name(
+            self.selected_index.unwrap(),
+            &self.rename_input) {
+            Ok(()) => String::from(RESULT_SUCCESS),
+            Err(e) => format!("Error renaming note: {:?}", e),
+        };
 
         self.state_rename = false;
         self.rename_target = None;
