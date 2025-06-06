@@ -8,11 +8,11 @@ impl App {
 
     pub fn show_toolbar(&mut self, ctx: &egui::Context) {
         const ICON_ADD: egui::ImageSource<'_> = 
-            egui::include_image!("../../assets/plus-circle-1425-svgrepo-com.svg");
+            egui::include_image!("../../assets/icons/plus-circle-1425-svgrepo-com.svg");
         const ICON_SAVE: egui::ImageSource<'_> = 
-            egui::include_image!("../../assets/save-item-1411-svgrepo-com.svg");
+            egui::include_image!("../../assets/icons/save-item-1411-svgrepo-com.svg");
         const ICON_REFRESH: egui::ImageSource<'_> = 
-            egui::include_image!("../../assets/arrow-repeat-236-svgrepo-com.svg");
+            egui::include_image!("../../assets/icons/arrow-repeat-236-svgrepo-com.svg");
 
         egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
             let style = ui.style_mut();
