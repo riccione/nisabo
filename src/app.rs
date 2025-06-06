@@ -44,6 +44,7 @@ pub struct App {
     pub state_exporting: bool,
     pub export_rx: Option<std::sync::mpsc::Receiver<f32>>,
     pub names: Vec<NoteIdName>,
+    pub status_error: String,
 }
 
 impl Default for SidebarTab {
@@ -85,6 +86,7 @@ impl App {
             state_exporting: false,
             export_rx: None,
             names: Vec::<NoteIdName>::new(),
+            status_error: String::new(),
         }
     }
 
@@ -256,73 +258,13 @@ impl App {
         Ok(()) 
     }
 
-    /*
-    pub fn show_rename(&mut self, ctx: &egui::Context) { 
-        if self.state_rename {
-            // tmp var
-            let mut open = self.state_rename;
-            egui::Window::new("Rename File")
-                .open(&mut open)
-                .resizable(false)
-                .show(ctx, |ui| {
-                    ui.label("Enter new name: ");
-                    if let Some(e) = &self.rename_error {
-                        ui.label(egui::RichText::new(e).color(egui::Color32::RED));
-                    }
-
-                    ui.horizontal(|ui| {
-                        ui.text_edit_singleline(&mut self.rename_input);
-                        
-                        if self.rename_input.trim().is_empty() {
-                            self.rename_error = Some("Name cannot be empty".to_string());
-                        } else {
-                            if ui.button("Rename").clicked() {
-                                if let Err(e) = self.try_rename_note() {
-                                    error!("Rename failed: {e}");
-                                }
-                            }
-                        }
-                  
-                        if ui.button("Cancel").clicked() {
-                            info!("Cancel clicked");
-                            self.state_rename = false;
-                            self.rename_target = None;
-                            self.rename_input.clear();
-                            self.rename_error = None;
-                        }
-                    });
-                });
-            if !open {
-                self.state_rename = false;
-                self.rename_target = None;
-                self.rename_input.clear();
-                self.rename_error = None;
-            }
-        }
-    }
-
-    fn try_rename_note(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let db = crate::db::database::Database::new(&self.db_path)?;
-        println!("{:?}", self.selected_index);
-        let _ = db.update_note_name(self.selected_index.unwrap(), &self.rename_input);
-
-        self.state_rename = false;
-        self.rename_target = None;
-        self.rename_input.clear();
-        self.rename_error = None;
-        // refresh ui
-        self.load_rows = false;
-        Ok(())
-    }
-    */
-    
     fn try_delete_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         println!("id: {:?}", id);
         let mut db = crate::db::database::Database::new(&self.db_path)?;
-        match db.delete_note_and_children_soft(id) {
-            Ok(()) => info!("Note deleted"),
-            Err(e) => eprintln!("Error deleting note: {:?}", e),
-        }
+        self.status_error = match db.delete_note_and_children_soft(id) {
+            Ok(()) => String::from("Ok"),
+            Err(e) => format!("Error deleting note: {:?}", e),
+        };
 
         // refresh ui
         self.load_rows = false;
@@ -425,7 +367,13 @@ impl App {
                 println!("note id {:?}", note.id);
                 let _ = self.try_get_note(note.id);
             }
-            // right btn
+
+            // right btn selection
+            if response.secondary_clicked() {
+                self.selected_index = Some(note.id);
+            }
+
+            // right btn menu
             response.context_menu(|ui| {
                 if !note.has_parent {
                     // add a child note, selected note is parent

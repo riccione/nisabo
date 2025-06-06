@@ -1,7 +1,6 @@
 use eframe::egui::{self};
 use log::{info, error};
 use crate::app::{App};
-use crate::db::models::{LinkType};
 
 impl App {
     pub fn show_rename(&mut self, ctx: &egui::Context) { 
