@@ -17,12 +17,13 @@ This project is licensed under the MIT License.
 
 ### Third-party Licenses
 
-Icons under PD license
-https://www.svgrepo.com/svg/512677/plus-circle-1425
-https://www.svgrepo.com/svg/512798/save-item-1411
-https://www.svgrepo.com/svg/511409/arrow-repeat-236
+#### Icons under PD license
 
-This app uses the following third-party libraries:
+- https://www.svgrepo.com/svg/512677/plus-circle-1425
+- https://www.svgrepo.com/svg/512798/save-item-1411
+- https://www.svgrepo.com/svg/511409/arrow-repeat-236
+
+#### This app uses the following third-party libraries:
 
 - [`egui`](https://github.com/emilk/egui) — MIT OR Apache-2.0 License
   Copyright (c) 2020 Emil Ernerfeldt
