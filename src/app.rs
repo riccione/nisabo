@@ -279,7 +279,7 @@ impl App {
     
     fn try_restore_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         println!("id: {:?}", id);
-        let db = crate::db::database::Database::new(&self.db_path)?;
+        let mut db = crate::db::database::Database::new(&self.db_path)?;
         let _ = db.restore_note(id);
 
         // refresh ui
@@ -290,7 +290,7 @@ impl App {
     
     fn try_permanently_delete(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         println!("id: {:?}", id);
-        let db = crate::db::database::Database::new(&self.db_path)?;
+        let mut db = crate::db::database::Database::new(&self.db_path)?;
         let _ = db.delete_note_hard(id);
 
         // refresh ui

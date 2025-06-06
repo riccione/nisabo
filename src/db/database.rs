@@ -219,18 +219,36 @@ impl Database {
         })
     }
     
-    pub fn delete_note_hard(&self, id: i64) -> Result<usize> {
+    pub fn delete_note_hard(&mut self, id: i64) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.execute(
+                "DELETE FROM note WHERE id = ?1",
+                &[&id],
+            )?;
+            Ok(())
+        })
+        /*
         self.conn.execute(
             "DELETE FROM note WHERE id = ?1",
             &[&id],
         )
+        */
     }
     
-    pub fn restore_note(&self, id: i64) -> Result<usize> {
+    pub fn restore_note(&mut self, id: i64) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.execute(
+                "UPDATE note SET deleted_at = NULL WHERE id = ?1",
+                &[&id],
+            )?;
+            Ok(())
+        })
+        /*
         self.conn.execute(
             "UPDATE note SET deleted_at = NULL WHERE id = ?1",
             &[&id],
         )
+        */
     }
     
     pub fn add_new_note(&self, name: &str) -> Result<i64> {
