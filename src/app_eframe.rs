@@ -1,4 +1,4 @@
-use eframe::egui::{self, Button, Color32, RichText};
+use eframe::egui::{self, Button, Color32, Key, RichText};
 use log::{info};
 use crate::ui::about::show_about;
 use crate::app::{App};
@@ -62,6 +62,14 @@ impl eframe::App for App {
             if self.show_about {
                 show_about(ctx, &mut self.show_about);
             }
+
+            // detect Ctrl+F
+            ctx.input(|i| {
+                if i.key_pressed(Key::F) && i.modifiers.ctrl {
+                    println!("Ctrl+F is pressed");
+                }
+            });
+
         } else {
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.vertical_centered(|ui| {
