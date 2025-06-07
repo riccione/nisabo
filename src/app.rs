@@ -45,6 +45,7 @@ pub struct App {
     pub export_rx: Option<std::sync::mpsc::Receiver<f32>>,
     pub names: Vec<NoteIdName>,
     pub status_error: String,
+    pub search_input: String,
 }
 
 impl Default for SidebarTab {
@@ -87,6 +88,7 @@ impl App {
             export_rx: None,
             names: Vec::<NoteIdName>::new(),
             status_error: String::new(),
+            search_input: String::new(),
         }
     }
 

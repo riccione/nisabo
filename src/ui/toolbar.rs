@@ -1,4 +1,4 @@
-use eframe::egui::{self, Align, Layout, Color32};
+use eframe::egui::{self, Align, Layout, Color32, TextEdit};
 use crate::app::{App};
 use crate::ui::toggle_compact::toggle;
 
@@ -48,7 +48,22 @@ impl App {
                 ).clicked() {
                     self.load_rows = false;
                 }
+                
+                ui.add_space(5.0);
+
                 toggle(ui, &mut self.state_is_right_panel_on);
+
+                ui.add_space(10.0);
+
+                // Search
+                ui.with_layout(
+                    Layout::centered_and_justified(egui::Direction::TopDown), |ui|{
+                        ui.add_sized(
+                            [100.0, 0.0],
+                            TextEdit::singleline(&mut self.search_input)
+                                .hint_text("Search")
+                        );
+                });
             });
         });
     }
