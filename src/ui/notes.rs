@@ -1,8 +1,7 @@
 use std::error::Error;
 use log::{info, error};
-use crate::db::models::{LinkType, NoteIdName};
+use crate::db::models::{NoteIdName};
 use eframe::egui::{self, RichText};
-use crate::constants::RESULT_SUCCESS;
 use crate::app::{App};
 
 impl App {

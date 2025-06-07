@@ -1,8 +1,6 @@
 use eframe::egui::{self, Align, Layout, Color32};
-use log::{info};
 use crate::app::{App};
 use crate::ui::toggle_compact::toggle;
-use crate::config::AppConfig;
 
 impl App {
 

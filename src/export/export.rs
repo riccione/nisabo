@@ -1,4 +1,3 @@
-use eframe::egui;
 use rfd::FileDialog;
 use std::fs::{self, File};
 use std::path::Path;

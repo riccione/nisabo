@@ -1,5 +1,4 @@
-use eframe::egui::{self, Align, Layout};
-use log::{info};
+use eframe::egui;
 use crate::app::{App, SidebarTab};
 use crate::markdown::render_md;
 
