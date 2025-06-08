@@ -66,9 +66,13 @@ impl eframe::App for App {
             // detect Ctrl+F
             ctx.input(|i| {
                 if i.key_pressed(Key::F) && i.modifiers.ctrl {
-                    println!("Ctrl+F is pressed");
+                    self.state_search = true;
                 }
             });
+
+            if self.state_search {
+                self.show_search(ctx);
+            }
 
         } else {
             egui::CentralPanel::default().show(ctx, |ui| {

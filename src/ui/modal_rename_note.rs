@@ -8,7 +8,7 @@ impl App {
         if self.state_rename {
             // tmp var
             let mut open = self.state_rename;
-            egui::Window::new("Rename File")
+            egui::Window::new("Rename Note")
                 .open(&mut open)
                 .resizable(false)
                 .show(ctx, |ui| {

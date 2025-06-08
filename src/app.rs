@@ -46,6 +46,7 @@ pub struct App {
     pub names: Vec<NoteIdName>,
     pub status_error: String,
     pub search_input: String,
+    pub state_search: bool,
 }
 
 impl Default for SidebarTab {
@@ -89,6 +90,7 @@ impl App {
             names: Vec::<NoteIdName>::new(),
             status_error: String::new(),
             search_input: String::new(),
+            state_search: false,
         }
     }
 
