@@ -49,12 +49,6 @@ impl App {
         self.status_error = crate::utils::result(
             db.delete_note_and_children_soft(id),
             "Error deleting note");
-        /*
-        self.status_error = match db.delete_note_and_children_soft(id) {
-            Ok(()) => String::from(RESULT_SUCCESS),
-            Err(e) => format!("Error deleting note: {:?}", e),
-        };
-        */
 
         // refresh ui
         self.load_rows = false;
@@ -164,6 +158,14 @@ impl App {
             }
 
             response.header_response.context_menu(|ui| {
+                // add a child note, selected note is parent
+                if ui.button("Add child note").clicked() {
+                    self.state_add_new_note = true;
+                    // parent id
+                    self.parent_note_id = Some(note.id);
+                    ui.close_menu();
+                }
+
                 if ui.button("Rename").clicked() {
                     info!("Rename clicked with id: {}", note.id);
                     self.rename_input = note.name.to_string();

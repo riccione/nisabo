@@ -23,7 +23,7 @@ log = "0.4.27"
 rfd = "0.15.3"
 serde = { version = "1.0.219", features = ["derive"] }
 toml = "0.8.22"
-rusqlite = { version = "0.35.0", features = ["bundled"] }
+rusqlite = { version = "0.35.0", features = ["bundled", "modern_sqlite"] }
 chrono = "0.4.41"
 pulldown-cmark = "0.13.0"
 egui_extras = { version = "0.31.1", features = ["all_loaders"] }

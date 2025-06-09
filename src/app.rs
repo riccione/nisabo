@@ -4,7 +4,7 @@ use eframe::egui;
 use log::{info, error};
 use crate::config::AppConfig;
 use std::error::Error;
-use crate::db::models::{NoteIdName};
+use crate::db::models::{NoteIdName, Note};
 
 #[derive(PartialEq)]
 pub enum SidebarTab {
@@ -47,6 +47,7 @@ pub struct App {
     pub status_error: String,
     pub search_input: String,
     pub state_search: bool,
+    pub search_result: Vec<Note>,
 }
 
 impl Default for SidebarTab {
@@ -91,6 +92,7 @@ impl App {
             status_error: String::new(),
             search_input: String::new(),
             state_search: false,
+            search_result: Vec::<Note>::new(),
         }
     }
 

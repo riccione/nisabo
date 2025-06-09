@@ -67,22 +67,28 @@ impl Database {
             );
             
             CREATE TRIGGER IF NOT EXISTS note_ai AFTER INSERT ON note BEGIN
-                INSERT INTO note_fts(id, name, content)
+                INSERT INTO note_fts(rowid, name, content)
                 VALUES (new.id, new.name, new.content);
+                -- INSERT INTO note_fts(id, name, content)
+                -- VALUES (new.id, new.name, new.content);
             END;
 
             CREATE TRIGGER IF NOT EXISTS note_au AFTER UPDATE ON note BEGIN
                 -- delete the old entry
-                INSERT INTO note_fts(note_fts, id, name, content) 
-                VALUES ('delete', old.id, old.name, old.content);
+                -- INSERT INTO note_fts(note_fts, id, name, content) 
+                -- VALUES ('delete', old.id, old.name, old.content);
+                DELETE FROM note_fts WHERE rowid = old.id;
                 -- insert the new entry
-                INSERT INTO note_fts(id, name, content) 
+                INSERT INTO note_fts(rowid, name, content) 
                 VALUES (new.id, new.name, new.content);
+                -- INSERT INTO note_fts(id, name, content) 
+                -- VALUES (new.id, new.name, new.content);
             END;
 
             CREATE TRIGGER IF NOT EXISTS note_ad AFTER DELETE ON note BEGIN
-                INSERT INTO note_fts(note_fts, id, name, content) 
-                VALUES ('delete', old.id, old.name, old.content);
+                DELETE FROM note_fts WHERE rowid = old.id;
+                -- INSERT INTO note_fts(note_fts, id, name, content) 
+                -- VALUES ('delete', old.id, old.name, old.content);
             END;
             ")?;
 
@@ -310,5 +316,29 @@ impl Database {
         }
 
         Ok(notes)
+    }
+
+    pub fn search(&self, query: &str) -> Result<Vec<Note>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT n.id, n.name, n.content
+            FROM note_fts fts 
+            JOIN note n ON n.id = fts.rowid 
+            WHERE note_fts MATCH ?1 
+            AND n.deleted_at IS NULL 
+            ORDER BY rank"
+        )?; 
+        
+        let note_iter = stmt.query_map(params![query], |row| {
+            Ok(Note {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                content: row.get(2)?,
+                created_at: String::new(),
+                updated_at: String::new(),
+                deleted_at: None,
+            })
+        })?;
+        
+        note_iter.collect()
     }
 }
