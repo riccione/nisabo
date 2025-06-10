@@ -67,6 +67,7 @@ impl eframe::App for App {
             ctx.input(|i| {
                 if i.key_pressed(Key::F) && i.modifiers.ctrl {
                     self.state_search = true;
+                    self.search_has_focus = true;
                 }
             });
 

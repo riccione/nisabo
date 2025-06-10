@@ -48,6 +48,7 @@ pub struct App {
     pub search_input: String,
     pub state_search: bool,
     pub search_result: Vec<Note>,
+    pub search_has_focus: bool,
 }
 
 impl Default for SidebarTab {
@@ -93,6 +94,7 @@ impl App {
             search_input: String::new(),
             state_search: false,
             search_result: Vec::<Note>::new(),
+            search_has_focus: false,
         }
     }
 

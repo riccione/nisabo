@@ -1,4 +1,4 @@
-use eframe::egui::{self, TextEdit};
+use eframe::egui::{self, TextEdit, Label, RichText};
 use log::{info, error};
 use crate::app::{App};
 use crate::constants::RESULT_SUCCESS;
@@ -16,7 +16,12 @@ impl App {
                         TextEdit::singleline(&mut self.search_input)
                             .hint_text("Search")
                     );
-                   
+
+                    if self.search_has_focus {
+                        response.request_focus();
+                        self.search_has_focus = false;
+                    }
+
                     let search_input_empty = self.search_input.trim().is_empty();
 
                     let search_btn = ui.add_enabled(
@@ -31,10 +36,48 @@ impl App {
                     }
                 });
 
+                if !self.search_result.is_empty() {
+                    ui.separator();
+
+                    egui::ScrollArea::vertical()
+                        .max_height(200.0)
+                        .show(ui, |ui| {
+                            ui.horizontal(|ui| {
+                                ui.add_sized([150.0, 0.0],
+                                             Label::new(RichText::new("Name").strong()));
+                                ui.add_sized([300.0, 0.0],
+                                             Label::new(RichText::new("Content").strong()));
+                            });
+                                
+                                for note in &self.search_result {
+                                    ui.horizontal(|ui| {
+                                        let preview = match &note.content {
+                                            Some(text) => {
+                                                let search = self.search_input.trim();
+                                                
+                                                text.split_whitespace()
+                                                    .find(|word| word.to_lowercase().contains(&search))
+                                                    .map(|w| w.to_string())
+                                                    .unwrap_or_else(|| "No match".to_string())
+                                                }, 
+                                            None => String::from("No content"),
+                                        };
+                                        
+                            ui.horizontal(|ui| {
+                                ui.add_sized([150.0, 0.0],
+                                             Label::new(&note.name));
+                                ui.add_sized([300.0, 0.0],
+                                             Label::new(preview));
+                            });
+                                    });
+                                }
+                        });
+                }
         });
         if !open {
             self.state_search = false;
             self.search_input = String::new();
+            self.search_has_focus = false;
         }
     }
 
