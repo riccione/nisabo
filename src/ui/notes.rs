@@ -32,7 +32,7 @@ impl App {
         Ok(()) 
     }
     
-    fn try_get_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn try_get_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         let db = crate::db::database::Database::new(&self.db_path)?;
         let note = db.get_note(id)?;
         println!("{:?}", note);

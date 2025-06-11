@@ -1,4 +1,4 @@
-use eframe::egui::{self, TextEdit, Label, RichText};
+use eframe::egui::{self, TextEdit, Label, RichText, Layout, Align};
 use log::{info, error};
 use crate::app::{App};
 use crate::constants::RESULT_SUCCESS;
@@ -9,7 +9,7 @@ impl App {
         egui::Window::new("Search")
             .open(&mut open)
             .resizable(false)
-            .anchor(egui::Align2::CENTER_TOP, [0.0, 0.0])
+            //.anchor(egui::Align2::CENTER_TOP, [0.0, 0.0])
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     let response = ui.add(
@@ -38,39 +38,49 @@ impl App {
 
                 if !self.search_result.is_empty() {
                     ui.separator();
+                    
+                    let search = self.search_input.trim();
+                    let mut results_to_display: Vec<(i64, String)> = Vec::new();
 
+                    for note in &self.search_result {
+                            let content = match &note.content {
+                                Some(text) => {
+                                    text.split_whitespace()
+                                        .find(|word| word.to_lowercase().contains(&search))
+                                        .map(|w| w.to_string())
+                                        .unwrap_or_else(|| "No match".to_string())
+                                    }, 
+                                None => String::from("No content"),
+                            };
+                           
+                            let name_match = &note.name.to_lowercase().contains(&search);
+                            let content_match = content.to_lowercase().contains(&search);
+                            
+                            let button_text = match (name_match, content_match) {
+                                (true, true) => format!("{}: {}", note.name, content),
+                                (true, false) => note.name.clone(),
+                                (false, true) => content.clone(),
+                                (false, false) => unreachable!(),
+                            };
+
+                            results_to_display.push((note.id, button_text));
+                    }
                     egui::ScrollArea::vertical()
                         .max_height(200.0)
                         .show(ui, |ui| {
-                            ui.horizontal(|ui| {
-                                ui.add_sized([150.0, 0.0],
-                                             Label::new(RichText::new("Name").strong()));
-                                ui.add_sized([300.0, 0.0],
-                                             Label::new(RichText::new("Content").strong()));
-                            });
-                                
-                                for note in &self.search_result {
-                                    ui.horizontal(|ui| {
-                                        let preview = match &note.content {
-                                            Some(text) => {
-                                                let search = self.search_input.trim();
-                                                
-                                                text.split_whitespace()
-                                                    .find(|word| word.to_lowercase().contains(&search))
-                                                    .map(|w| w.to_string())
-                                                    .unwrap_or_else(|| "No match".to_string())
-                                                }, 
-                                            None => String::from("No content"),
-                                        };
-                                        
-                            ui.horizontal(|ui| {
-                                ui.add_sized([150.0, 0.0],
-                                             Label::new(&note.name));
-                                ui.add_sized([300.0, 0.0],
-                                             Label::new(preview));
-                            });
+                            for (id, button_text) in &results_to_display {
+                                ui.horizontal(|ui| {
+                                    ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
+                                        let row_btn = egui::Button::new(
+                                            RichText::new(button_text)).frame(false);
+                                        if ui.add_sized([450.0, 0.0], row_btn).clicked() {
+                                            self.selected_index = Some(*id);
+                                            let _ = self.try_get_note(*id);    
+                                            println!("Clicked on id: {}", id);
+                                        }
                                     });
-                                }
+                                });
+                            }
                         });
                 }
         });
