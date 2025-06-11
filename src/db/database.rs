@@ -75,9 +75,9 @@ impl Database {
 
             CREATE TRIGGER IF NOT EXISTS note_au AFTER UPDATE ON note BEGIN
                 -- delete the old entry
-                -- INSERT INTO note_fts(note_fts, id, name, content) 
-                -- VALUES ('delete', old.id, old.name, old.content);
-                DELETE FROM note_fts WHERE rowid = old.id;
+                INSERT INTO note_fts(note_fts, id, name, content) 
+                VALUES ('delete', old.id, old.name, old.content);
+                -- DELETE FROM note_fts WHERE rowid = old.id;
                 -- insert the new entry
                 INSERT INTO note_fts(rowid, name, content) 
                 VALUES (new.id, new.name, new.content);
@@ -86,9 +86,9 @@ impl Database {
             END;
 
             CREATE TRIGGER IF NOT EXISTS note_ad AFTER DELETE ON note BEGIN
-                DELETE FROM note_fts WHERE rowid = old.id;
-                -- INSERT INTO note_fts(note_fts, id, name, content) 
-                -- VALUES ('delete', old.id, old.name, old.content);
+                -- DELETE FROM note_fts WHERE rowid = old.id;
+                INSERT INTO note_fts(note_fts, rowid, name, content) 
+                VALUES ('delete', old.id, old.name, old.content);
             END;
             ")?;
 
