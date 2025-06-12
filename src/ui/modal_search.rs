@@ -1,7 +1,8 @@
-use eframe::egui::{self, TextEdit, Label, RichText, Layout, Align};
+use eframe::egui::{self, TextEdit, Frame, Sense, Label, RichText, Layout, Align};
 use log::{info, error};
 use crate::app::{App};
 use crate::constants::RESULT_SUCCESS;
+use crate::ui::custom_button::left_aligned_button;
 
 impl App {
     pub fn show_search(&mut self, ctx: &egui::Context) { 
@@ -71,12 +72,9 @@ impl App {
                             for (id, button_text) in &results_to_display {
                                 ui.horizontal(|ui| {
                                     ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                                        let row_btn = egui::Button::new(
-                                            RichText::new(button_text)).frame(false);
-                                        if ui.add_sized([450.0, 0.0], row_btn).clicked() {
+                                        if left_aligned_button(ui, button_text, 450.0, 24.0).clicked() {
                                             self.selected_index = Some(*id);
                                             let _ = self.try_get_note(*id);    
-                                            println!("Clicked on id: {}", id);
                                         }
                                     });
                                 });
