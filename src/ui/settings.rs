@@ -1,7 +1,7 @@
 use eframe::egui::{self, ComboBox};
 use crate::app::{App};
 use crate::ui::toggle_compact::toggle;
-use crate::constants::{DEFAULT_FONT, DEFAULT_FONT_SIZE};
+use crate::constants::{DEFAULT_IS_DARK_MODE, DEFAULT_FONT, DEFAULT_FONT_SIZE};
 
 impl App {
     pub fn show_font_settings(&mut self, ctx: &egui::Context) {
@@ -74,7 +74,7 @@ impl App {
                         self.apply_font_size(ctx);
 
                         // reset values in the config
-                        self.config.is_dark_mode = Some(true);
+                        self.config.is_dark_mode = Some(DEFAULT_IS_DARK_MODE);
                         self.config.font = Some(DEFAULT_FONT.to_string());
                         self.config.font_size = DEFAULT_FONT_SIZE;
                         self.config.save_config();
