@@ -5,6 +5,7 @@ use log::{info, error};
 use crate::config::AppConfig;
 use std::error::Error;
 use crate::db::models::{NoteIdName, Note};
+use std::collections::HashMap;
 
 #[derive(PartialEq)]
 pub enum SidebarTab {
@@ -49,6 +50,9 @@ pub struct App {
     pub state_search: bool,
     pub search_result: Vec<Note>,
     pub search_has_focus: bool,
+    pub current_font: String,
+    pub fonts_ls: Vec<String>,
+    pub fonts_data: HashMap<String, Vec<u8>>
 }
 
 impl Default for SidebarTab {
@@ -95,6 +99,9 @@ impl App {
             state_search: false,
             search_result: Vec::<Note>::new(),
             search_has_focus: false,
+            current_font: String::new(),
+            fonts_ls: Vec::new(),
+            fonts_data: HashMap::new()
         }
     }
 
@@ -108,7 +115,14 @@ impl App {
                 app.state_start = true;
             }
         }
-        
+
+        // load fonts
+        app.fonts_ls = vec!["Default".to_string()];
+        app.current_font = match config.font{
+            Some(x) => x,
+            None => String::from("Default"),
+        };
+
         app.font_size = if config.font_size < 1.0 { // without config.toml file
             app.default_font_size
         } else {
@@ -138,6 +152,7 @@ impl App {
                     
                     let config = AppConfig {
                         last_archive_path: Some(path.clone()),
+                        font: Some(String::from("Default")),
                         font_size: self.font_size,
                         is_dark_mode: Some(self.state_is_dark_mode),
                     };
@@ -166,6 +181,7 @@ impl App {
             info!("Archive opened from: {}", path.display());
             let config = AppConfig {
                 last_archive_path: Some(path.clone()),
+                font: Some(String::from("Default")),
                 font_size: self.font_size,
                 is_dark_mode: Some(self.state_is_dark_mode),
             };

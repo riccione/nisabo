@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::egui::{self, ComboBox};
 use crate::app::{App};
 use crate::ui::toggle_compact::toggle;
 
@@ -21,6 +21,27 @@ impl App {
                         self.config.is_dark_mode = Some(self.state_is_dark_mode); 
                         self.config.save_config();
                     }
+
+                    ui.separator();
+                    ui.label("Select font:");
+
+                    let current_font = self.current_font.clone();
+                    let fonts_ls = self.fonts_ls.clone();
+                    ComboBox::from_label("Font")
+                        .selected_text(&current_font)
+                        .show_ui(ui, |ui| {
+                            for font in &fonts_ls {
+                                if ui.selectable_value(&mut self.current_font,
+                                                       font.clone(),
+                                                       font).clicked() {
+                                    if self.current_font != "Default" {
+                                        println!("apply font");
+                                    }
+                                    self.config.font = Some(self.current_font.clone());
+                                    self.config.save_config();
+                                }
+                            }
+                        });
 
                     ui.separator();
 
