@@ -29,3 +29,10 @@ This project is licensed under the MIT License.
   Copyright (c) 2020 Emil Ernerfeldt
 
 `egui` is used under the terms of the MIT License.
+
+#### Fonts
+
+**Noto Fonts**
+- [`Noto Fonts`](https://fonts.google.com/noto/specimen/Noto+Sans?query=noto)
+Licensed under the SIL Open Font License, Version 1.1.
+Copyright (c) Google.
