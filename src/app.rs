@@ -6,6 +6,7 @@ use crate::config::AppConfig;
 use std::error::Error;
 use crate::db::models::{NoteIdName, Note};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(PartialEq)]
 pub enum SidebarTab {
@@ -117,7 +118,30 @@ impl App {
         }
 
         // load fonts
-        app.fonts_ls = vec!["Default".to_string()];
+        let mut available_fonts = vec!["Default".to_string()];
+        let mut fonts_data = HashMap::new();
+
+        if let Ok(enteries) = std::fs::read_dir("assets/fonts") {
+            for x in enteries {
+                if let Ok(x) = x {
+                    let path = x.path();
+                    if path.extension().and_then(|s| s.to_str()) == Some("ttf") {
+                        if let Some(stem) = path.file_stem() {
+                            let name = stem.to_string_lossy().to_string();
+                            if let Ok(bytes) = std::fs::read(&path) {
+                                fonts_data.insert(name.clone(), bytes);
+                                available_fonts.push(name);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        println!("{:?}", available_fonts);
+        app.fonts_data = fonts_data;
+
+        // app.fonts_ls = vec!["Default".to_string()];
+        app.fonts_ls = available_fonts;
         app.current_font = match config.font{
             Some(x) => x,
             None => String::from("Default"),

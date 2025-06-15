@@ -1,4 +1,4 @@
-use eframe::egui::{self, ComboBox};
+use eframe::egui::{self, ComboBox, FontData, FontDefinitions};
 use crate::app::{App};
 use crate::ui::toggle_compact::toggle;
 use crate::constants::{DEFAULT_IS_DARK_MODE, DEFAULT_FONT, DEFAULT_FONT_SIZE};
@@ -37,6 +37,7 @@ impl App {
                                                        font).clicked() {
                                     if self.current_font != "Default" {
                                         println!("apply font");
+                                        self.apply_font(ctx);
                                     }
                                     self.config.font = Some(self.current_font.clone());
                                     self.config.save_config();
@@ -105,5 +106,31 @@ impl App {
         .into();
 
         ctx.set_style(style);
+    }
+
+    fn apply_font(&self, ctx: &egui::Context) {
+        let mut fonts = FontDefinitions::default();
+        
+        let font = self.current_font.clone();
+        let font_data = match self.fonts_data.get(&font) {
+            Some(x) => x,
+            None => {
+                eprintln!("Font {} not found, using Default font", font);
+                return;
+            }
+        };
+
+        // install new font
+        fonts.font_data.insert(
+            font.clone(),
+            std::sync::Arc::new(FontData::from_owned(font_data.clone())));
+        
+        fonts
+            .families
+            .entry(egui::FontFamily::Proportional)
+            .or_default()
+            .insert(0, font.to_string());
+        
+        ctx.set_fonts(fonts);
     }
 }

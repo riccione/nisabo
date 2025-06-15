@@ -33,6 +33,13 @@ This project is licensed under the MIT License.
 #### Fonts
 
 **Noto Fonts**
-- [`Noto Fonts`](https://fonts.google.com/noto/specimen/Noto+Sans?query=noto)
+**Roboto Fonts**
+- [`Noto Fonts`](https://fonts.google.com/)
 Licensed under the SIL Open Font License, Version 1.1.
 Copyright (c) Google.
+
+**DejaVu Fonts**
+- [`DejaVu Fonts`](https://dejavu-fonts.github.io/)
+Licensed under Public domain.
+Copyright (c) Bitstream Vera Fonts.
+Copyright (c) Arev Fonts by Tavmjong Bah.
