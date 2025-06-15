@@ -7,6 +7,7 @@ use log::{info};
 #[derive(Serialize, Deserialize, Default)]
 pub struct AppConfig {
     pub last_archive_path: Option<PathBuf>,
+    pub font_dir: Option<PathBuf>,
     pub font: Option<String>,
     pub font_size: f32,
     pub is_dark_mode: Option<bool>,
@@ -34,6 +35,7 @@ impl AppConfig {
 
     pub fn save_config(&self) {
         info!("saving config");
+        println!("{:?}, {:?}", self.last_archive_path, self.font_dir);
         if let Some(config_path) = Self::get_config_path() {
             info!("{:?}", config_path);
             if let Some(parent) = config_path.parent() {
@@ -42,6 +44,7 @@ impl AppConfig {
             
             let config = AppConfig {
                 last_archive_path: self.last_archive_path.clone(),
+                font_dir: self.font_dir.clone(),
                 font: self.font.clone(),
                 font_size: self.font_size,
                 is_dark_mode: self.is_dark_mode,

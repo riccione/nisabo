@@ -4,9 +4,10 @@ use eframe::egui;
 use log::{info, error};
 use crate::config::AppConfig;
 use std::error::Error;
+// replace NoteIdName to Note
 use crate::db::models::{NoteIdName, Note};
-use std::collections::HashMap;
 use crate::font::FontManager;
+use crate::constants::{DEFAULT_FONT_DIR, DEFAULT_FONT};
 
 #[derive(PartialEq)]
 pub enum SidebarTab {
@@ -148,14 +149,24 @@ impl App {
                     let mut db = crate::db::database::Database::new(path_str)?;
                     let _ = db.configure_db()?;
                     let _ = db.init_tables()?;
-                    
+                   
+                    let font_dir = PathBuf::from(DEFAULT_FONT_DIR);
+                  
                     let config = AppConfig {
                         last_archive_path: Some(path.clone()),
-                        font: Some(String::from("Default")),
+                        font_dir: Some(font_dir.clone()),
+                        font: Some(DEFAULT_FONT.to_string()),
                         font_size: self.font_size,
                         is_dark_mode: Some(self.state_is_dark_mode),
                     };
                     config.save_config();
+
+                    // update values in Config struct 
+                    self.config.last_archive_path = Some(path.clone());
+                    self.config.font_dir = Some(font_dir);
+                    self.config.font = Some(DEFAULT_FONT.to_string());
+                    self.config.font_size = self.font_size;
+                    self.config.is_dark_mode = Some(self.state_is_dark_mode);
 
                     self.state_start = true;
                     self.db_path = path.to_string_lossy().into_owned();
@@ -180,11 +191,21 @@ impl App {
             info!("Archive opened from: {}", path.display());
             let config = AppConfig {
                 last_archive_path: Some(path.clone()),
-                font: Some(String::from("Default")),
+                font_dir: Some(PathBuf::from(DEFAULT_FONT_DIR)),
+                // TODO: need to replace with fm.current_font
+                font: Some(DEFAULT_FONT.to_string()),
                 font_size: self.font_size,
                 is_dark_mode: Some(self.state_is_dark_mode),
             };
+            println!("last archive path: {:?}", config.last_archive_path);
             config.save_config();
+            
+            // update values in Config struct 
+            self.config.last_archive_path = Some(path.clone());
+            self.config.font_dir = Some(PathBuf::from(DEFAULT_FONT_DIR));
+            self.config.font = Some(DEFAULT_FONT.to_string());
+            self.config.font_size = self.font_size;
+            self.config.is_dark_mode = Some(self.state_is_dark_mode);
             
             let x = path.clone();
             self.db_path = x.to_string_lossy().into_owned();

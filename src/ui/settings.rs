@@ -1,4 +1,4 @@
-use eframe::egui::{self, ComboBox, FontData, FontDefinitions};
+use eframe::egui::{self, ComboBox};
 use crate::app::{App};
 use crate::ui::toggle_compact::toggle;
 use crate::constants::{DEFAULT_IS_DARK_MODE, DEFAULT_FONT, DEFAULT_FONT_SIZE};
@@ -18,7 +18,7 @@ impl App {
                     ui.label("Dark/Light mode:");
                     let response = toggle(ui, &mut self.state_is_dark_mode);
                     if response.changed() {
-                        println!("{:?}", response);
+                        println!("VALUE: {:?}", self.config.last_archive_path);
                         self.config.is_dark_mode = Some(self.state_is_dark_mode); 
                         self.config.save_config();
                     }

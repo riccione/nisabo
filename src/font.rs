@@ -1,9 +1,10 @@
 use std::collections::HashMap;
-use crate::constants::{DEFAULT_FONT};
+use crate::constants::{DEFAULT_FONT_DIR, DEFAULT_FONT};
 
 #[derive(Default)]
 pub struct FontManager {
     pub current_font: String,
+    pub font_dir: String,
     pub fonts: Vec<String>,
     pub font_cache: HashMap<String, Vec<u8>>,
 }
@@ -24,6 +25,7 @@ impl FontManager {
 
         let mut fm = Self {
             current_font: DEFAULT_FONT.to_string(),
+            font_dir: DEFAULT_FONT_DIR.to_string(),
             fonts: fonts,
             font_cache 
         };
