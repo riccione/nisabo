@@ -8,6 +8,7 @@ mod markdown;
 mod export;
 mod constants;
 mod utils;
+mod font;
 use app::App;
 
 fn main() -> Result<(), eframe::Error> {

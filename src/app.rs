@@ -7,6 +7,7 @@ use std::error::Error;
 use crate::db::models::{NoteIdName, Note};
 use std::collections::HashMap;
 use std::sync::Arc;
+use crate::font::FontManager;
 
 #[derive(PartialEq)]
 pub enum SidebarTab {
@@ -53,7 +54,8 @@ pub struct App {
     pub search_has_focus: bool,
     pub current_font: String,
     pub fonts_ls: Vec<String>,
-    pub fonts_data: HashMap<String, Vec<u8>>
+    pub fonts_data: HashMap<String, Vec<u8>>,
+    pub font_manager: FontManager,
 }
 
 impl Default for SidebarTab {
@@ -102,7 +104,8 @@ impl App {
             search_has_focus: false,
             current_font: String::new(),
             fonts_ls: Vec::new(),
-            fonts_data: HashMap::new()
+            fonts_data: HashMap::new(),
+            font_manager: FontManager::new()
         }
     }
 
@@ -119,7 +122,9 @@ impl App {
 
         // load fonts
         let mut available_fonts = vec!["Default".to_string()];
-        let mut fonts_data = HashMap::new();
+
+        
+        //let mut fonts_data = HashMap::new();
 
         if let Ok(enteries) = std::fs::read_dir("assets/fonts") {
             for x in enteries {
@@ -129,7 +134,7 @@ impl App {
                         if let Some(stem) = path.file_stem() {
                             let name = stem.to_string_lossy().to_string();
                             if let Ok(bytes) = std::fs::read(&path) {
-                                fonts_data.insert(name.clone(), bytes);
+                                //fonts_data.insert(name.clone(), bytes);
                                 available_fonts.push(name);
                             }
                         }
@@ -138,8 +143,7 @@ impl App {
             }
         }
         println!("{:?}", available_fonts);
-        app.fonts_data = fonts_data;
-
+        // app.fonts_data = fonts_data;
         // app.fonts_ls = vec!["Default".to_string()];
         app.fonts_ls = available_fonts;
         app.current_font = match config.font{

@@ -108,7 +108,24 @@ impl App {
         ctx.set_style(style);
     }
 
-    fn apply_font(&self, ctx: &egui::Context) {
+    fn apply_font(&mut self, ctx: &egui::Context) {
+        let font_name = self.current_font.clone();
+        if let Some(font_data) = self.font_manager.get_font(&font_name) {
+            let mut fonts = egui::FontDefinitions::default();
+            fonts.font_data.insert(
+                font_name.to_string(),
+                std::sync::Arc::new(egui::FontData::from_owned(font_data.clone())),
+            );
+        
+            fonts
+                .families
+                .entry(egui::FontFamily::Proportional)
+                .or_default()
+                .insert(0, font_name.to_string());
+        
+            ctx.set_fonts(fonts);
+        }
+        /*
         let mut fonts = FontDefinitions::default();
         
         let font = self.current_font.clone();
@@ -132,5 +149,6 @@ impl App {
             .insert(0, font.to_string());
         
         ctx.set_fonts(fonts);
+        */
     }
 }
