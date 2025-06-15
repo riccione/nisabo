@@ -26,20 +26,22 @@ impl App {
                     ui.separator();
                     ui.label("Select font:");
 
-                    let current_font = self.current_font.clone();
-                    let fonts_ls = self.fonts_ls.clone();
+                    let current_font = self.font_manager.current_font.clone();
+                    let fonts_ls = self.font_manager.list_fonts().clone();
                     ComboBox::from_label("Font")
                         .selected_text(&current_font)
                         .show_ui(ui, |ui| {
-                            for font in &fonts_ls {
-                                if ui.selectable_value(&mut self.current_font,
+                            for font in fonts_ls {
+                                if font == current_font {
+                                    continue;
+                                }
+                                if ui.selectable_value(&mut self.font_manager.current_font,
                                                        font.clone(),
                                                        font).clicked() {
-                                    if self.current_font != "Default" {
-                                        println!("apply font");
+                                    if self.font_manager.current_font != "Default" {
                                         self.apply_font(ctx);
                                     }
-                                    self.config.font = Some(self.current_font.clone());
+                                    self.config.font = Some(self.font_manager.current_font.clone());
                                     self.config.save_config();
                                 }
                             }
@@ -108,47 +110,24 @@ impl App {
         ctx.set_style(style);
     }
 
-    fn apply_font(&mut self, ctx: &egui::Context) {
-        let font_name = self.current_font.clone();
-        if let Some(font_data) = self.font_manager.get_font(&font_name) {
-            let mut fonts = egui::FontDefinitions::default();
-            fonts.font_data.insert(
-                font_name.to_string(),
-                std::sync::Arc::new(egui::FontData::from_owned(font_data.clone())),
-            );
-        
-            fonts
-                .families
-                .entry(egui::FontFamily::Proportional)
-                .or_default()
-                .insert(0, font_name.to_string());
-        
-            ctx.set_fonts(fonts);
-        }
-        /*
-        let mut fonts = FontDefinitions::default();
-        
-        let font = self.current_font.clone();
-        let font_data = match self.fonts_data.get(&font) {
-            Some(x) => x,
-            None => {
-                eprintln!("Font {} not found, using Default font", font);
-                return;
+    pub fn apply_font(&mut self, ctx: &egui::Context) {
+        let font_name = self.font_manager.current_font.clone();
+        if font_name != DEFAULT_FONT {
+            if let Some(font_data) = self.font_manager.get_font(&font_name) {
+                let mut fonts = egui::FontDefinitions::default();
+                fonts.font_data.insert(
+                    font_name.to_string(),
+                    std::sync::Arc::new(egui::FontData::from_owned(font_data.clone())),
+                );
+            
+                fonts
+                    .families
+                    .entry(egui::FontFamily::Proportional)
+                    .or_default()
+                    .insert(0, font_name.to_string());
+            
+                ctx.set_fonts(fonts);
             }
-        };
-
-        // install new font
-        fonts.font_data.insert(
-            font.clone(),
-            std::sync::Arc::new(FontData::from_owned(font_data.clone())));
-        
-        fonts
-            .families
-            .entry(egui::FontFamily::Proportional)
-            .or_default()
-            .insert(0, font.to_string());
-        
-        ctx.set_fonts(fonts);
-        */
+        }
     }
 }
