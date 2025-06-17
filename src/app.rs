@@ -2,7 +2,7 @@ use std::path::{PathBuf};
 use rfd::FileDialog;
 use eframe::egui;
 use log::{info, error};
-use crate::config::AppConfig;
+use crate::config::Config;
 use std::error::Error;
 // replace NoteIdName to Note
 use crate::db::models::{NoteIdName, Note};
@@ -17,7 +17,7 @@ pub enum SidebarTab {
 
 #[derive(Default)]
 pub struct App {
-    pub db_path: String,
+    pub db_path: String, // TODO: remove, use config.last... instead
     pub show_about: bool,
     pub rename_target: Option<PathBuf>,
     pub rename_input: String,
@@ -31,9 +31,9 @@ pub struct App {
     pub state_start: bool,
     pub selected_tab: SidebarTab,
     pub show_settings: bool,
-    pub font_size: f32,
-    pub default_font_size: f32,
-    pub config: AppConfig,
+    pub font_size: f32, // TODO: remove, use from config
+    pub default_font_size: f32, // TODO: remove, use const from constans.rs
+    pub config: Config,
     pub state_add_new_note: bool,
     pub parent_note_id: Option<i64>,
     pub add_new_note_input: String,
@@ -81,7 +81,7 @@ impl App {
             show_settings: false,
             font_size: 13.0,
             default_font_size: 13.0,
-            config: AppConfig::load_config(),
+            config: Config::load_config(),
             state_add_new_note: false,
             parent_note_id: None,
             add_new_note_input: String::new(),
@@ -108,7 +108,7 @@ impl App {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         let mut app = Self::default_values();
         
-        let config = AppConfig::load_config();
+        let config = Config::load_config();
         if let Some(x) = config.last_archive_path {
             if x.exists() {
                 app.db_path = x.to_string_lossy().into_owned();
@@ -152,7 +152,7 @@ impl App {
                    
                     let font_dir = PathBuf::from(DEFAULT_FONT_DIR);
                   
-                    let config = AppConfig {
+                    let config = Config {
                         last_archive_path: Some(path.clone()),
                         font_dir: Some(font_dir.clone()),
                         font: Some(DEFAULT_FONT.to_string()),
@@ -189,7 +189,7 @@ impl App {
     pub fn open_archive(&mut self) {
         if let Some(path) = FileDialog::new().pick_file() {
             info!("Archive opened from: {}", path.display());
-            let config = AppConfig {
+            let config = Config {
                 last_archive_path: Some(path.clone()),
                 font_dir: Some(PathBuf::from(DEFAULT_FONT_DIR)),
                 // TODO: need to replace with fm.current_font
@@ -219,7 +219,10 @@ impl App {
             error!("No db file selected");
         }
     }
-  
+
+    // moved to ui/trash.rs
+    // TODO: remove after testing
+    /*
     pub fn show_trash(&mut self, ui: &mut egui::Ui) 
         -> Result<(), Box<dyn Error>> {
         if !self.state_trash_load {
@@ -330,5 +333,6 @@ impl App {
         }
         Ok(())
     }
+*/
 
 }

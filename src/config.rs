@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use log::{info};
 
 #[derive(Serialize, Deserialize, Default)]
-pub struct AppConfig {
+pub struct Config {
     pub last_archive_path: Option<PathBuf>,
     pub font_dir: Option<PathBuf>,
     pub font: Option<String>,
@@ -13,7 +13,7 @@ pub struct AppConfig {
     pub is_dark_mode: Option<bool>,
 }
 
-impl AppConfig {
+impl Config {
     fn get_config_path() -> Option<PathBuf> {
         dirs::config_dir()
             .map(|dir| dir.join("nisabo/config.toml"))
@@ -25,12 +25,12 @@ impl AppConfig {
             info!("{:?}", config_path);
 
             if let Ok(data) = fs::read_to_string(config_path) {
-                if let Ok(config) = toml::from_str::<AppConfig>(&data) {
+                if let Ok(config) = toml::from_str::<Config>(&data) {
                     return config;
                 }
             }
         }
-        AppConfig::default()
+        Config::default()
     }
 
     pub fn save_config(&self) {
@@ -42,7 +42,7 @@ impl AppConfig {
                 let _ = fs::create_dir_all(parent);
             }
             
-            let config = AppConfig {
+            let config = Config {
                 last_archive_path: self.last_archive_path.clone(),
                 font_dir: self.font_dir.clone(),
                 font: self.font.clone(),

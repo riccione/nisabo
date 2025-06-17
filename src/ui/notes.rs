@@ -185,4 +185,34 @@ impl App {
             });
         }
     }
+
+    pub fn try_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(id) = self.selected_index {
+            let mut db = crate::db::database::Database::new(&self.db_path)?;
+            match db.update_note_content(id, &self.edited_content) {
+                Ok(_) => {
+                    println!("Saved successfully!");
+                    self.original_content = self.edited_content.clone();
+                }
+                Err(e) => println!("Failed to save: {e}"),
+            } 
+        }
+        Ok(())
+    }
+
+    pub fn try_auto_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if self.edited_note_id.is_some() {
+            let mut db = crate::db::database::Database::new(&self.db_path)?;
+            match db.update_note_content(self.edited_note_id.unwrap(),  &self.edited_content) {
+                Ok(_) => {
+                    println!("Saved successfully!");
+                    self.original_content = String::new(); 
+                    self.edited_content = String::new();
+                    self.edited_note_id = None;
+                }
+                Err(e) => println!("Failed to save: {e}"),
+            } 
+        }
+        Ok(())
+    }
 }

@@ -10,3 +10,4 @@ pub mod modal_rename_note;
 pub mod modal_search;
 pub mod custom_button;
 pub mod notes;
+pub mod trash;
