@@ -101,7 +101,7 @@ impl App {
             search_result: Vec::<Note>::new(),
             search_has_focus: false,
             current_font: String::new(),
-            font_manager: FontManager::new()
+            font_manager: FontManager::new(),
         }
     }
 
@@ -115,6 +115,12 @@ impl App {
                 app.state_start = true;
             }
         }
+        
+        // get font dir
+        app.font_manager.font_dir = config.font_dir
+            .as_ref()
+            .map(|x| x.to_string_lossy().into_owned())
+            .unwrap_or(DEFAULT_FONT_DIR.to_string());
 
         // load fonts
         app.font_manager.current_font = match config.font{

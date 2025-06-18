@@ -1,4 +1,6 @@
 use eframe::egui::{self, ComboBox};
+use rfd::FileDialog;
+use std::path::Path;
 use crate::app::{App};
 use crate::ui::toggle_compact::toggle;
 use crate::constants::{DEFAULT_IS_DARK_MODE, DEFAULT_FONT, DEFAULT_FONT_SIZE};
@@ -22,6 +24,45 @@ impl App {
                         self.config.is_dark_mode = Some(self.state_is_dark_mode); 
                         self.config.save_config();
                     }
+
+                    ui.separator();
+                    // fonts location
+                    ui.horizontal(|ui| {
+                        let fd_response = ui.add(egui::TextEdit::singleline(
+                                &mut self.font_manager.font_dir));
+
+                        if fd_response.changed() {
+                            // validate: check if path exists and it is a dir
+                            let path = Path::new(self.font_manager.font_dir.trim());
+                            if path.exists() && path.is_dir() {
+                                // save to config
+                                println!("Save to config from changed");
+                            } else {
+                                if !path.exists() {
+                                    eprintln!("Error: path does not exist");
+                                } else if !path.is_dir() {
+                                    eprintln!("Error: path is not a directory");
+                                } else {
+                                    eprintln!("Ok");
+                                }
+                            }
+                        }
+                        if ui.button("...").clicked() {
+                            if let Some(path) = FileDialog::new()
+                                .set_title("Select dir with fonts")
+                                .pick_folder() {
+                                
+                                self.font_manager.font_dir = path
+                                    .to_string_lossy()
+                                    .into_owned();
+                                // save to config
+                                self.config.font_dir = Some(path);
+                                self.config.save_config();
+                            } else {
+                                eprintln!("No directory selected");
+                            }
+                        }
+                    });
 
                     ui.separator();
                     ui.label("Select font:");
