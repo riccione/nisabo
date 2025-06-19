@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::constants::{DEFAULT_FONT_DIR, DEFAULT_FONT};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct FontManager {
     pub current_font: String,
     pub font_dir: String,
@@ -11,7 +11,7 @@ pub struct FontManager {
 
 impl FontManager {
     
-    pub fn new() -> Self {
+    pub fn new(font_dir: String) -> Self {
         // load DejaVuSans at compile time
         let mut font_cache = HashMap::new();
         let font_name = "DejaVuSans";
@@ -25,7 +25,7 @@ impl FontManager {
 
         let mut fm = Self {
             current_font: DEFAULT_FONT.to_string(),
-            font_dir: DEFAULT_FONT_DIR.to_string(),
+            font_dir, //DEFAULT_FONT_DIR.to_string(),
             fonts: fonts,
             font_cache 
         };
@@ -35,9 +35,10 @@ impl FontManager {
     }
 
     pub fn load_available_fonts(&mut self) {
-        let font_dir = "assets/fonts";
-        
-        if let Ok(enteries) = std::fs::read_dir(font_dir) {
+        // let font_dir = "assets/fonts";
+        println!("load_available fonts {}",self.font_dir);
+
+        if let Ok(enteries) = std::fs::read_dir(&self.font_dir) {
             for entry in enteries.flatten() {
                 let path = entry.path();
 
@@ -55,7 +56,7 @@ impl FontManager {
                 }
             }
         } else {
-            eprintln!("Failed to read dir: {}", font_dir);
+            eprintln!("Failed to read dir: {}", self.font_dir);
         }
     }
 
@@ -66,7 +67,10 @@ impl FontManager {
                 return self.font_cache.get(name);
             }
             
-            let path = format!("assets/fonts/{}.ttf", name);
+            let path = format!("{}/{}.ttf", 
+                               self.font_dir,
+                               name);
+            println!("full path to the font: {path}");
             match std::fs::read(&path) {
                 Ok(bytes) => {
                     self.font_cache.insert(name.to_string(), bytes);

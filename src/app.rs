@@ -64,6 +64,13 @@ impl Default for SidebarTab {
 
 impl App {
     pub fn default_values() -> Self {
+        let config = Config::load_config();
+        // get font dir
+        let font_dir = match config.font_dir_as_string() {
+            Some(x) => x,
+            None => DEFAULT_FONT_DIR.to_string(),
+        };
+
         Self {
             db_path: String::new(),
             show_about: false,
@@ -81,7 +88,7 @@ impl App {
             show_settings: false,
             font_size: 13.0,
             default_font_size: 13.0,
-            config: Config::load_config(),
+            config,
             state_add_new_note: false,
             parent_note_id: None,
             add_new_note_input: String::new(),
@@ -101,7 +108,7 @@ impl App {
             search_result: Vec::<Note>::new(),
             search_has_focus: false,
             current_font: String::new(),
-            font_manager: FontManager::new(),
+            font_manager: FontManager::new(font_dir),
         }
     }
 
