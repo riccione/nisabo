@@ -109,7 +109,7 @@ impl App {
         let mut app = Self::default_values();
         
         let config = Config::load_config();
-        if let Some(x) = config.last_archive_path {
+        if let Some(x) = config.last_archive_path.clone() {
             if x.exists() {
                 app.db_path = x.to_string_lossy().into_owned();
                 app.state_start = true;
@@ -117,10 +117,10 @@ impl App {
         }
         
         // get font dir
-        app.font_manager.font_dir = config.font_dir
-            .as_ref()
-            .map(|x| x.to_string_lossy().into_owned())
-            .unwrap_or(DEFAULT_FONT_DIR.to_string());
+        app.font_manager.font_dir = match config.font_dir_as_string() {
+            Some(x) => x,
+            None => DEFAULT_FONT_DIR.to_string(),
+        };
 
         // load fonts
         app.font_manager.current_font = match config.font{

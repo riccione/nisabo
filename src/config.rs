@@ -19,6 +19,12 @@ impl Config {
             .map(|dir| dir.join("nisabo/config.toml"))
     }
 
+    pub fn font_dir_as_string(&self) -> Option<String> {
+        self.font_dir
+            .as_ref()
+            .map(|x| x.to_string_lossy().into_owned())
+    }
+    
     pub fn load_config() -> Self {
         info!("loading config");
         if let Some(config_path) = Self::get_config_path() {
