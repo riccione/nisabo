@@ -12,12 +12,17 @@ use eframe::egui;
  */ 
 pub fn render_md(ui: &mut egui::Ui, md: &str) {
     let parser = Parser::new(md);
+    let mut buffer = String::new();
 
     let mut heading: Option<u32> = None;
-    let mut buffer = String::new();
+
     let mut is_bold = false;
     let mut is_italic = false;
     let mut is_code_block = false;
+
+    let mut is_list_item = false;
+    let mut ordered_index = 1;
+    let mut list_prefix: Option<String> = None;
 
     for event in parser {
         match event {
@@ -29,6 +34,22 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                 Tag::CodeBlock(_) => {
                     is_code_block = true;
                     buffer.clear();
+                }
+                Tag::List(Some(start)) => {
+                    ordered_index = start;
+                }
+                Tag::List(None) => {
+                    ordered_index = 0;
+                }
+                Tag::Item => {
+                    is_list_item = true;
+                    list_prefix = Some(if ordered_index == 0 {
+                        "- ".to_string()
+                    } else {
+                        let prefix = format!("{}. ", ordered_index);
+                        ordered_index += 1;
+                        prefix
+                    });
                 }
                 Tag::Strong => {
                     is_bold = true;
@@ -62,6 +83,10 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                     );
                     buffer.clear();
                 }
+                TagEnd::Item => {
+                    is_list_item = false;
+                    list_prefix = None;
+                }
                 TagEnd::Strong => {
                     is_bold = false;
                 }
@@ -76,6 +101,11 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
             Event::Text(text) => {
                 if heading.is_some() {
                     buffer.push_str(&text);
+                } else if is_list_item {
+                    if let Some(prefix) = list_prefix.take() {
+                        let l = format!("{}{}", prefix, text.as_ref());
+                        ui.label(l);
+                    }
                 } else if is_bold {
                     ui.label(RichText::new(text.as_ref()).strong());
                 } else if is_italic {
