@@ -37,7 +37,8 @@ impl App {
                     }
                 }
             });
-
+        
+        /*
         if self.state_is_right_panel_on {
             egui::SidePanel::right("right panel")
                 .resizable(true)
@@ -50,7 +51,8 @@ impl App {
         egui::CentralPanel::default()
             .show(ctx, |ui| {
                 egui::ScrollArea::vertical()
-                    .auto_shrink([false; 2])
+                    //.auto_shrink([false; 2])
+                    .auto_shrink([true; 2])
                     .show(ui, |ui| {
                         if let Some(_) = self.selected_index {
                             ui.add(
@@ -60,6 +62,40 @@ impl App {
                             );
                         }
                     });
+        });
+        */
+
+        egui::CentralPanel::default()
+            .show(ctx, |ui| {
+                egui::ScrollArea::vertical()
+                    .show(ui, |ui| {
+                        let total_width = ui.available_width();
+                        let half_width = total_width / 2.0;
+
+                        ui.horizontal(|ui| {
+                            ui.vertical(|ui| {
+                                if self.state_is_right_panel_on {
+                                    ui.set_width(half_width);
+                                }
+                                if let Some(_) = self.selected_index {
+                                    ui.add(
+                                        egui::TextEdit::multiline(&mut self.edited_content)
+                                            .lock_focus(true)
+                                            .desired_width(f32::INFINITY)
+                                    );
+                                }
+                            });
+                       
+                            if self.state_is_right_panel_on {
+                                ui.separator();
+
+                                ui.vertical(|ui| {
+                                    ui.set_width(half_width);
+                                    render_md(ui, &self.edited_content);
+                                });
+                            }
+                        });
+            });
         });
     }
 }

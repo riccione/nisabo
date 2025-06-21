@@ -55,6 +55,9 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                 }
                 _ => {}
             },
+            Event::Rule => {
+                ui.separator();
+            },
             Event::Text(text) => {
                 if heading.is_some() {
                     buffer.push_str(&text);
