@@ -37,6 +37,9 @@ impl FontManager {
     pub fn load_available_fonts(&mut self) {
         // let font_dir = "assets/fonts";
         println!("load_available fonts {}",self.font_dir);
+        // clear fonts before loading
+        self.fonts.clear();
+        self.fonts.push(DEFAULT_FONT.to_string());
 
         if let Ok(enteries) = std::fs::read_dir(&self.font_dir) {
             for entry in enteries.flatten() {

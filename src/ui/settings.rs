@@ -28,9 +28,14 @@ impl App {
                     ui.separator();
                     // fonts location
                     ui.horizontal(|ui| {
+                        ui.add(egui::TextEdit::singleline(
+                                &mut self.font_manager.font_dir));
+                        
+                        /*
                         let fd_response = ui.add(egui::TextEdit::singleline(
                                 &mut self.font_manager.font_dir));
-
+                        
+                        // TODO: simplify logic
                         if fd_response.changed() {
                             // validate: check if path exists and it is a dir
                             let path = Path::new(self.font_manager.font_dir.trim());
@@ -47,6 +52,7 @@ impl App {
                                 }
                             }
                         }
+                        */
                         if ui.button("...").clicked() {
                             if let Some(path) = FileDialog::new()
                                 .set_title("Select dir with fonts")
@@ -58,21 +64,23 @@ impl App {
                                 // save to config
                                 self.config.font_dir = Some(path);
                                 self.config.save_config();
+                                
+                                self.font_manager.load_available_fonts();
                             } else {
                                 eprintln!("No directory selected");
                             }
-                        }
+                        } 
                     });
 
                     ui.separator();
                     ui.label("Select font:");
 
                     let current_font = self.font_manager.current_font.clone();
-                    let fonts_ls = self.font_manager.list_fonts().clone();
+                    let fonts = self.font_manager.list_fonts().clone();
                     ComboBox::from_label("Font")
                         .selected_text(&current_font)
                         .show_ui(ui, |ui| {
-                            for font in fonts_ls {
+                            for font in fonts {
                                 if font == current_font {
                                     continue;
                                 }
