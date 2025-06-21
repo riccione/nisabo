@@ -77,7 +77,7 @@ impl App {
                 //self.selected_index = Some(note.id);
                 //println!("Note selected: {}", note.id);
                 // auto-save
-                if !is_selected && self.edited_content != self.original_content {
+                if self.edited_content != self.original_content {
                     let _ = self.try_auto_update_note_content();
                 }
 
