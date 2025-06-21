@@ -2,12 +2,21 @@ use pulldown_cmark::{Parser, Event, Tag, TagEnd};
 use egui::RichText;
 use eframe::egui;
 
+/*
+ * TODO:
+ * You can extend this as you wish.
+ * Maybe move it in different place.
+ * Maybe split it...
+ *
+ * Parse md to RichText using pulldown_cmark and egui
+ */ 
 pub fn render_md(ui: &mut egui::Ui, md: &str) {
     let parser = Parser::new(md);
 
     let mut heading: Option<u32> = None;
     let mut buffer = String::new();
     let mut is_bold = false;
+    let mut is_italic = false;
     let mut is_code_block = false;
 
     for event in parser {
@@ -23,6 +32,9 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                 }
                 Tag::Strong => {
                     is_bold = true;
+                }
+                Tag::Emphasis => { // italic
+                    is_italic = true;
                 }
                 _ => {}
             },
@@ -51,7 +63,10 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                     buffer.clear();
                 }
                 TagEnd::Strong => {
-                    is_bold = true;
+                    is_bold = false;
+                }
+                TagEnd::Emphasis => {
+                    is_italic = false;
                 }
                 _ => {}
             },
@@ -63,6 +78,8 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                     buffer.push_str(&text);
                 } else if is_bold {
                     ui.label(RichText::new(text.as_ref()).strong());
+                } else if is_italic {
+                    ui.label(RichText::new(text.as_ref()).italics());
                 } else {
                     ui.label(RichText::new(text.as_ref()));
                 }
