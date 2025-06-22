@@ -1,5 +1,6 @@
 use pulldown_cmark::{Parser, Event, Tag, TagEnd};
-use egui::RichText;
+use egui::{RichText, FontId, TextStyle};
+use egui::text::{LayoutJob, TextFormat};
 use eframe::egui;
 
 /*
@@ -13,12 +14,13 @@ use eframe::egui;
 pub fn render_md(ui: &mut egui::Ui, md: &str) {
     let parser = Parser::new(md);
     let mut buffer = String::new();
+    let mut is_paragraph = false;
+    let mut layout_job = LayoutJob::default();
 
     let mut heading: Option<u32> = None;
 
     let mut is_bold = false;
     let mut is_italic = false;
-    let mut is_code_block = false;
 
     let mut is_list_item = false;
     let mut ordered_index = 1;
@@ -31,8 +33,11 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                     heading = Some(level as u32);
                     buffer.clear();
                 }
+                Tag::Paragraph => {
+                    is_paragraph = true;
+                    layout_job = LayoutJob::default();
+                }
                 Tag::CodeBlock(_) => {
-                    is_code_block = true;
                     buffer.clear();
                 }
                 Tag::List(Some(start)) => {
@@ -58,7 +63,7 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                     is_italic = true;
                 }
                 _ => {}
-            },
+            }
             Event::End(tag_end) => match tag_end {
                 TagEnd::Heading(_) => {
                     if let Some(level) = heading.take() {
@@ -72,9 +77,12 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                         buffer.clear();
                     }
                 }
+                TagEnd::Paragraph => {
+                    is_paragraph = false;
+                    ui.label(layout_job.clone());
+                    ui.add_space(7.0);
+                }
                 TagEnd::CodeBlock => {
-                    is_code_block = false;
-
                     ui.label(
                         RichText::new(&buffer)
                             .monospace()
@@ -94,11 +102,29 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                     is_italic = false;
                 }
                 _ => {}
-            },
+            }
             Event::Rule => {
                 ui.separator();
-            },
+            }
             Event::Text(text) => {
+                if is_paragraph {
+                    let style = ui.style();
+                    let font_id = if is_bold {
+                        style.text_styles.get(&TextStyle::Heading).cloned()
+                    } else {
+                        style.text_styles.get(&TextStyle::Body).cloned()
+                    }
+                    .unwrap_or_else(|| FontId::proportional(14.0)); // fallback
+
+                    let mut format = TextFormat {
+                        font_id,
+                        italics: is_italic,
+                        color: ui.style().visuals.text_color(),
+                        ..Default::default()
+                    };
+
+                    layout_job.append(&text, 0.0, format);
+                } else {
                 if heading.is_some() {
                     buffer.push_str(&text);
                 } else if is_list_item {
@@ -113,7 +139,8 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                 } else {
                     ui.label(RichText::new(text.as_ref()));
                 }
-            },
+                }
+            }
             Event::Code(code) => {
                 ui.label(
                     RichText::new(code.as_ref())
@@ -122,12 +149,10 @@ pub fn render_md(ui: &mut egui::Ui, md: &str) {
                         .color(egui::Color32::LIGHT_GRAY),
                 );
             }
-            Event::SoftBreak | Event::HardBreak => {
-                if is_code_block {
-                    buffer.push('\n');
-                } else {
-                    ui.separator();
-                }
+            Event::SoftBreak | Event::HardBreak if is_paragraph => {
+                //ui.allocate_exact_size(vec2(0.0, 12.0), Sense::hover());
+                //ui.end_row();
+                layout_job.append("\n", 0.0, TextFormat::default());
             }
             _ => {}
         }
