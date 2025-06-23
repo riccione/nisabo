@@ -107,4 +107,11 @@ impl eframe::App for App {
             });
         }
     }
+
+    // auto save on exit
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        if self.edited_content != self.original_content {
+            let _ = self.try_auto_update_note_content();
+        }
+    }
 }

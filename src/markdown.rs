@@ -203,6 +203,8 @@ fn event_text(
             buffer.push('\n');
         } else if state.is_code {
             buffer.push_str(&text);
+        } else if state.heading_level.is_some() {
+            buffer.push_str(&text);
         } else if state.is_paragraph {
             let style = ui.style();
             let font_id = if state.is_bold {
