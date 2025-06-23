@@ -91,7 +91,7 @@ impl App {
 
                                 ui.vertical(|ui| {
                                     ui.set_width(half_width);
-                                    render_md(ui, &self.edited_content);
+                                    render_md(ui, ctx, &self.edited_content);
                                 });
                             }
                         });
