@@ -11,6 +11,7 @@ pub struct Config {
     pub font: Option<String>,
     pub font_size: f32,
     pub is_dark_mode: Option<bool>,
+    pub autosave: Option<bool>,
 }
 
 impl Config {
@@ -24,7 +25,7 @@ impl Config {
             .as_ref()
             .map(|x| x.to_string_lossy().into_owned())
     }
-    
+
     pub fn load_config() -> Self {
         info!("loading config");
         if let Some(config_path) = Self::get_config_path() {
@@ -54,6 +55,7 @@ impl Config {
                 font: self.font.clone(),
                 font_size: self.font_size,
                 is_dark_mode: self.is_dark_mode,
+                autosave: self.autosave,
             };
             println!("Values: {}", self.font_size);
 

@@ -31,28 +31,6 @@ impl App {
                         ui.add(egui::TextEdit::singleline(
                                 &mut self.font_manager.font_dir));
                         
-                        /*
-                        let fd_response = ui.add(egui::TextEdit::singleline(
-                                &mut self.font_manager.font_dir));
-                        
-                        // TODO: simplify logic
-                        if fd_response.changed() {
-                            // validate: check if path exists and it is a dir
-                            let path = Path::new(self.font_manager.font_dir.trim());
-                            if path.exists() && path.is_dir() {
-                                // save to config
-                                println!("Save to config from changed");
-                            } else {
-                                if !path.exists() {
-                                    eprintln!("Error: path does not exist");
-                                } else if !path.is_dir() {
-                                    eprintln!("Error: path is not a directory");
-                                } else {
-                                    eprintln!("Ok");
-                                }
-                            }
-                        }
-                        */
                         if ui.button("...").clicked() {
                             if let Some(path) = FileDialog::new()
                                 .set_title("Select dir with fonts")
@@ -129,6 +107,17 @@ impl App {
                         self.config.is_dark_mode = Some(DEFAULT_IS_DARK_MODE);
                         self.config.font = Some(DEFAULT_FONT.to_string());
                         self.config.font_size = DEFAULT_FONT_SIZE;
+                        self.config.save_config();
+                    }
+
+                    ui.separator();
+                    // AutoSave
+                    // by default it is always true
+                    ui.label("AutoSave:");
+                    let mut autosave = self.config.autosave.unwrap_or(true);
+                    let response = toggle(ui, &mut autosave);
+                    if response.changed() {
+                        self.config.autosave = Some(autosave); 
                         self.config.save_config();
                     }
 

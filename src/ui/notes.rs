@@ -200,6 +200,7 @@ impl App {
         Ok(())
     }
 
+    // TODO: add checking of config.autosave flag
     pub fn try_auto_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if self.edited_note_id.is_some() {
             let mut db = crate::db::database::Database::new(&self.db_path)?;

@@ -1,6 +1,5 @@
 use std::path::{PathBuf};
 use rfd::FileDialog;
-use eframe::egui;
 use log::{info, error};
 use crate::config::Config;
 use std::error::Error;
@@ -171,6 +170,7 @@ impl App {
                         font: Some(DEFAULT_FONT.to_string()),
                         font_size: self.font_size,
                         is_dark_mode: Some(self.state_is_dark_mode),
+                        autosave: Some(true),
                     };
                     config.save_config();
 
@@ -209,6 +209,7 @@ impl App {
                 font: Some(DEFAULT_FONT.to_string()),
                 font_size: self.font_size,
                 is_dark_mode: Some(self.state_is_dark_mode),
+                autosave: Some(true),
             };
             println!("last archive path: {:?}", config.last_archive_path);
             config.save_config();
