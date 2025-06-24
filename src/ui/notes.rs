@@ -200,9 +200,14 @@ impl App {
         Ok(())
     }
 
-    // TODO: add checking of config.autosave flag
+    /*
+     * autosave works only if 2 conditions met:
+     * 1. self.config.autosave == true and
+     * 2. self.edited_note_id.is_some()
+     */ 
     pub fn try_auto_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        if self.edited_note_id.is_some() {
+        let autosave = self.config.autosave.unwrap_or(true);
+        if self.edited_note_id.is_some() && autosave {
             let mut db = crate::db::database::Database::new(&self.db_path)?;
             match db.update_note_content(self.edited_note_id.unwrap(),  &self.edited_content) {
                 Ok(_) => {
