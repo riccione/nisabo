@@ -42,12 +42,15 @@ pub struct App {
     pub edited_note_id: Option<i64>,
     pub state_is_right_panel_on: bool,
     pub state_is_dark_mode: bool,
+
     pub state_export_progress: Option<f32>,
     pub state_exporting: bool,
-    pub state_import_progress: Option<f32>,
-    pub state_importing: bool,
     pub export_rx: Option<std::sync::mpsc::Receiver<f32>>,
-    pub import_rx: Option<std::sync::mpsc::Receiver<f32>>,
+    
+    pub state_io_progress: Option<f32>,
+    pub state_io: bool,
+    pub io_rx: Option<std::sync::mpsc::Receiver<f32>>,
+
     pub names: Vec<NoteIdName>,
     pub status_error: String,
     pub search_input: String,
@@ -100,12 +103,15 @@ impl App {
             edited_note_id: None,
             state_is_right_panel_on: true,
             state_is_dark_mode: true,
+
             state_export_progress: None,
             state_exporting: false,
-            state_import_progress: None,
-            state_importing: false,
             export_rx: None,
-            import_rx: None,
+            
+            state_io_progress: None,
+            state_io: false,
+            io_rx: None,
+
             names: Vec::<NoteIdName>::new(),
             status_error: String::new(),
             search_input: String::new(),
