@@ -35,6 +35,16 @@ impl eframe::App for App {
                 }
             }
         }
+        
+        if let Some(rx) = &self.import_rx {
+            if let Ok(progress) = rx.try_recv() {
+                self.state_import_progress = Some(progress);
+                if progress >= 1.0 {
+                    self.state_importing = false;
+                    self.import_rx = None;
+                }
+            }
+        }
 
         if self.state_exporting {
             println!("exporting");
@@ -45,6 +55,18 @@ impl eframe::App for App {
                 .show(ctx, |ui| {
                     ui.label("Export in progress. Please wait..");
                     if let Some(progress) = self.state_export_progress {
+                        ui.add(egui::ProgressBar::new(progress).show_percentage());
+                    }
+                });
+        }
+        if self.state_importing {
+            egui::Window::new("Importing notes..")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .show(ctx, |ui| {
+                    ui.label("Export in progress. Please wait..");
+                    if let Some(progress) = self.state_import_progress {
                         ui.add(egui::ProgressBar::new(progress).show_percentage());
                     }
                 });

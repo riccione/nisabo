@@ -25,11 +25,9 @@ impl App {
 
                     ui.separator();
                 });
-
                 // Tab content
                 match self.selected_tab {
                     SidebarTab::Notes => {
-                        //let _ = self.show_db_ls(ui);
                         let _ = self.show_notes(ui);
                     },
                     SidebarTab::Trash => {

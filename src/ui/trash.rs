@@ -23,7 +23,10 @@ impl App {
         if self.notes_deleted.is_empty() {
             ui.label("Trash is empty");
         } else {
-            egui::ScrollArea::vertical().show(ui, |ui| {
+            // pub fn auto_shrink(self, auto_shrink: impl Into<Vec2b>) -> Self
+            egui::ScrollArea::vertical()
+                .auto_shrink([false; 2]) // basically false, false
+                .show(ui, |ui| {
                 // for borrow issues
                 let xs: Vec<(i64, String)> = self.notes_deleted.iter()
                     .map(|(id, name)| (*id, name.clone()))

@@ -25,7 +25,9 @@ impl App {
         if self.names.is_empty() {
             ui.label("No notes found");
         } else {
-            egui::ScrollArea::vertical().show(ui, |ui| {
+            egui::ScrollArea::vertical()
+                .auto_shrink([false; 2])
+                .show(ui, |ui| {
                 self.draw_note_tree(ui);
             });
         }

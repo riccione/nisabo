@@ -19,6 +19,11 @@ impl App {
                         ui.close_menu();
                     }
                     ui.separator();
+                    if ui.button("Import *.md").clicked() {
+                        let _ = self.import();   
+                        ui.close_menu();
+                    }
+                    ui.separator();
                     ui.menu_button("Export", |ui| {
                         if ui.button("Export to *.md").clicked() {
                             let _ = self.export("md");   

@@ -6,6 +6,7 @@ mod db;
 mod metadata;
 mod markdown;
 mod export;
+mod import;
 mod constants;
 mod utils;
 mod font;

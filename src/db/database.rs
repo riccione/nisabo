@@ -116,6 +116,20 @@ impl Database {
             Ok(())
         })
     }
+    
+    pub fn insert_note(&mut self, name: &str, content: &str) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.execute("
+            INSERT INTO note (
+                name, content, created_at, updated_at, deleted_at
+            ) VALUES (?1, ?2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)
+            ",
+            (name, content),
+            )?;
+
+            Ok(())
+        })
+    }
 
     pub fn get_notes(&self) -> Result<Vec<NoteIdName>, rusqlite::Error> {
         let mut x = self.conn
