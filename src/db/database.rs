@@ -248,6 +248,12 @@ impl Database {
         })
     }
     
+    pub fn empty_trash(&mut self) -> Result<()> {
+        let mut stmt = self.conn.prepare("DELETE FROM note WHERE deleted_at IS NOT NULL")?;
+        stmt.execute([])?;
+        Ok(())
+    }
+    
     pub fn restore_note(&mut self, id: i64) -> Result<()> {
         self.with_transaction(|tx| {
             tx.execute(

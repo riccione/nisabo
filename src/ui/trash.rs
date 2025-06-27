@@ -51,8 +51,12 @@ impl App {
                         }
 
                         if ui.button("Permanently Delete").clicked() {
-                            info!("Delete clicked");
                             let _ = self.try_permanently_delete(id);
+                            ui.close_menu();
+                        }
+                        
+                        if ui.button("Empty trash").clicked() {
+                            let _ = self.try_permanently_delete_all();
                             ui.close_menu();
                         }
                     });
@@ -63,10 +67,8 @@ impl App {
     }
 
     fn try_restore_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
-        println!("id: {:?}", id);
         let mut db = crate::db::database::Database::new(&self.db_path)?;
         self.status_error = crate::utils::result(db.restore_note(id), "Error restoring note");
-        //let _ = db.restore_note(id);
 
         // refresh ui
         self.load_rows = false;
@@ -75,12 +77,22 @@ impl App {
     }
     
     fn try_permanently_delete(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
-        println!("id: {:?}", id);
         let mut db = crate::db::database::Database::new(&self.db_path)?;
         self.status_error = crate::utils::result(
             db.delete_note_hard(id),
             "Error deleting note");
-        //let _ = db.delete_note_hard(id);
+
+        // refresh ui
+        self.load_rows = false;
+        self.state_trash_load = false;
+        Ok(())
+    }
+    
+    fn try_permanently_delete_all(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let mut db = crate::db::database::Database::new(&self.db_path)?;
+        self.status_error = crate::utils::result(
+            db.empty_trash(),
+            "Error empyting trash");
 
         // refresh ui
         self.load_rows = false;
