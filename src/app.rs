@@ -4,6 +4,7 @@ use log::{info, error};
 use crate::config::Config;
 use std::error::Error;
 use eframe::egui;
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 // replace NoteIdName to Note
 use crate::db::models::{NoteIdName, Note};
 use crate::font::FontManager;
@@ -45,6 +46,7 @@ pub struct App {
     pub state_is_dark_mode: bool,
 
     //pub state_export_progress: Option<f32>,
+    pub import_done: Arc<AtomicBool>,
     pub state_exporting: bool,
     //pub export_rx: Option<std::sync::mpsc::Receiver<f32>>,
     
@@ -106,6 +108,7 @@ impl App {
             state_is_dark_mode: true,
 
             // state_export_progress: None,
+            import_done: Arc::new(AtomicBool::new(false)),
             state_exporting: false,
             // export_rx: None,
             

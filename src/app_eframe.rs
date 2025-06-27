@@ -1,5 +1,6 @@
 use eframe::egui::{self, Button, Color32, Key, RichText};
 use log::{info};
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use crate::ui::about::show_about;
 use crate::app::{App};
 
@@ -54,6 +55,11 @@ impl eframe::App for App {
                 "Import in progress. Please wait..",
                 self.state_io_progress,
             );
+        }
+
+        if self.import_done.load(Ordering::Relaxed) {
+            self.import_done.store(false, Ordering::Relaxed); // reset
+            self.load_rows = false; // trigger reload
         }
         
         if self.state_start {

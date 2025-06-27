@@ -1,6 +1,7 @@
 use rfd::FileDialog;
 use std::fs;
 use std::error::Error;
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use crate::app::{App};
 
 impl App {
@@ -15,6 +16,8 @@ impl App {
             self.io_rx = Some(rx);
             self.state_importing = true;
             self.state_io_progress = Some(0.0);
+            
+            let import_done = self.import_done.clone();
                 
             let entries: Vec<_> = fs::read_dir(path)?
                 .filter_map(Result::ok)
@@ -50,10 +53,12 @@ impl App {
                     // progress
                     tx.send((i+1) as f32 / total as f32).ok();
             }
+            import_done.store(true, Ordering::Relaxed);
                 });
         } else {
         eprintln!("No directory selected");
         }
+        self.load_rows = false;
         Ok(())
     }
 }
