@@ -75,11 +75,15 @@ impl eframe::App for App {
                 show_about(ctx, &mut self.show_about);
             }
 
-            // detect Ctrl+F
+            // keyboard shortcuts: 
+            // Ctrl+F - search
+            // Ctrl+S - save
             ctx.input(|i| {
                 if i.key_pressed(Key::F) && i.modifiers.ctrl {
                     self.state_search = true;
                     self.search_has_focus = true;
+                } else if i.key_pressed(Key::S) && i.modifiers.ctrl {
+                    let _ = self.try_update_note_content();
                 }
             });
 
