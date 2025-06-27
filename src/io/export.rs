@@ -17,9 +17,9 @@ impl App {
         if let Some(path) = FileDialog::new()
             .pick_folder() {
                 let (tx, rx) = std::sync::mpsc::channel::<f32>();
-                self.export_rx = Some(rx);
+                self.io_rx = Some(rx);
                 self.state_exporting = true;
-                self.state_export_progress = Some(0.0);
+                self.state_io_progress = Some(0.0);
                 
                 // create an empty dir 'exported'
                 let full_path = Path::new(&path).join("exported");

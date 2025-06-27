@@ -5,7 +5,7 @@ use crate::app::{App};
 
 impl App {
     pub fn import(&mut self) -> Result<(), Box<dyn Error>> {
-        if self.state_io {
+        if self.state_importing || self.state_exporting {
             println!("call early exit");
             return Ok(()); // importing in progress, only one can be run!
         }
@@ -13,7 +13,7 @@ impl App {
         if let Some(path) = FileDialog::new().pick_folder() {
             let (tx, rx) = std::sync::mpsc::channel::<f32>();
             self.io_rx = Some(rx);
-            self.state_io = true;
+            self.state_importing = true;
             self.state_io_progress = Some(0.0);
                 
             let entries: Vec<_> = fs::read_dir(path)?
@@ -51,9 +51,9 @@ impl App {
                     tx.send((i+1) as f32 / total as f32).ok();
             }
                 });
-    } else {
+        } else {
         eprintln!("No directory selected");
-    }
+        }
         Ok(())
-   }
+    }
 }

@@ -3,6 +3,7 @@ use rfd::FileDialog;
 use log::{info, error};
 use crate::config::Config;
 use std::error::Error;
+use eframe::egui;
 // replace NoteIdName to Note
 use crate::db::models::{NoteIdName, Note};
 use crate::font::FontManager;
@@ -43,12 +44,12 @@ pub struct App {
     pub state_is_right_panel_on: bool,
     pub state_is_dark_mode: bool,
 
-    pub state_export_progress: Option<f32>,
+    //pub state_export_progress: Option<f32>,
     pub state_exporting: bool,
-    pub export_rx: Option<std::sync::mpsc::Receiver<f32>>,
+    //pub export_rx: Option<std::sync::mpsc::Receiver<f32>>,
     
     pub state_io_progress: Option<f32>,
-    pub state_io: bool,
+    pub state_importing: bool,
     pub io_rx: Option<std::sync::mpsc::Receiver<f32>>,
 
     pub names: Vec<NoteIdName>,
@@ -104,12 +105,12 @@ impl App {
             state_is_right_panel_on: true,
             state_is_dark_mode: true,
 
-            state_export_progress: None,
+            // state_export_progress: None,
             state_exporting: false,
-            export_rx: None,
+            // export_rx: None,
             
             state_io_progress: None,
-            state_io: false,
+            state_importing: false,
             io_rx: None,
 
             names: Vec::<NoteIdName>::new(),
@@ -244,5 +245,24 @@ impl App {
         } else {
             error!("No db file selected");
         }
+    }
+    
+    pub fn show_progress_window(
+        &mut self,
+        ctx: &egui::Context,
+        title: &str,
+        message: &str,
+        progress: Option<f32>,
+    ) {
+        egui::Window::new(title)
+            .collapsible(false)
+            .resizable(false)
+            .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+            .show(ctx, |ui| {
+                ui.label(message);
+                if let Some(progress) = progress {
+                    ui.add(egui::ProgressBar::new(progress).show_percentage());
+                }
+            });
     }
 }
