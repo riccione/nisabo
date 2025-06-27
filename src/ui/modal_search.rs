@@ -54,9 +54,10 @@ impl App {
                                 None => String::from("No content"),
                             };
                            
-                            let name_match = &note.name.to_lowercase().contains(&search);
+                            let name_match = note.name.to_lowercase().contains(&search);
                             let content_match = content.to_lowercase().contains(&search);
-                            
+                           
+                            if name_match || content_match {
                             let button_text = match (name_match, content_match) {
                                 (true, true) => format!("{}: {}", note.name, content),
                                 (true, false) => note.name.clone(),
@@ -65,7 +66,11 @@ impl App {
                             };
 
                             results_to_display.push((note.id, button_text));
+                            }
                     }
+                    if results_to_display.is_empty() {
+                        ui.label("No match found");
+                    } else {
                     egui::ScrollArea::vertical()
                         .max_height(200.0)
                         .show(ui, |ui| {
@@ -80,6 +85,7 @@ impl App {
                                 });
                             }
                         });
+                    }
                 }
         });
         if !open {
