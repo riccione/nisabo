@@ -19,6 +19,12 @@ jobs:
             artifact_name: nisabo
             asset_name: nisabo_x86_64-unknown-linux-gnu
             use-cross: false
+          - build: linux-musl
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            artifact_name: nisabo
+            asset_name: nisabo_x86_64-unknown-linux-musl
+            use-cross: false
           - build: x86_64-pc-windows-gnu
             os: windows-latest
             target: x86_64-pc-windows-gnu
