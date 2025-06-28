@@ -16,29 +16,25 @@ jobs:
           - build: linux-x86_64
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: hermes
-            asset_name: hermes_x86_64-unknown-linux-gnu
+            artifact_name: nisabo
+            asset_name: nisabo_x86_64-unknown-linux-gnu
             use-cross: false
           - build: x86_64-pc-windows-gnu
             os: windows-latest
             target: x86_64-pc-windows-gnu
-            artifact_name: hermes.exe
-            asset_name: hermes_x86_64-pc-windows-gnu.exe
+            artifact_name: nisabo.exe
+            asset_name: nisabo_x86_64-pc-windows-gnu.exe
             use-cross: false
           - build: macos-x86_64
             os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: hermes
-            asset_name: hermes_x86_64-apple-darwin
+            artifact_name: nisabo
+            asset_name: nisabo_x86_64-apple-darwin
             use-cross: false
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4.1.0
-
-    - name: Set the version
-      id: version
-      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -48,16 +44,12 @@ jobs:
         target: ${{ matrix.target }}
     
     - name: Add mingw64 to path for x86_64-gnu
-      run: echo "C:\msys64\mingw64\bin" >> $GITHUB_PATH
       if: matrix.os == 'windows-latest'
-      shell: bash
+      run: echo "$env:Path;C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
+      shell: pwsh
 
     - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        use-cross: ${{ matrix.use-cross }}
-        command: build
-        args: --release --locked
+      run: cargo build --release --locked --target ${{ matrix.target }}
     
     # UPX for linux
     - name: run UPX on Linux
@@ -66,7 +58,7 @@ jobs:
       with:
         version: latest
         files: |
-          target/release/hermes
+          target/release/nisabo
         args: --best --lzma
 
     # experimental part for UPX
@@ -76,8 +68,18 @@ jobs:
       with:
         version: latest
         files: |
-          target/release/hermes.exe
+          target/release/nisabo.exe
         args: --best --lzma
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref }}
+        name: Release ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
