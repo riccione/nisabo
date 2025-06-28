@@ -71,16 +71,6 @@ jobs:
           target/${{ matrix.target }}/release/nisabo.exe
         args: --best --lzma
 
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: ${{ github.ref }}
-        name: Release ${{ github.ref_name }}
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
