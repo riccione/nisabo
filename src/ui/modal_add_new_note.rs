@@ -18,12 +18,19 @@ impl App {
                     }
 
                     ui.horizontal(|ui| {
-                        ui.text_edit_singleline(&mut self.add_new_note_input);
-                        
+                        let response = ui.add(
+                            egui::TextEdit::singleline(&mut self.add_new_note_input));
+
                         if self.add_new_note_input.trim().is_empty() {
                             self.add_new_note_error = Some("Name cannot be empty".to_string());
                         } else {
-                            if ui.button("Add").clicked() {
+                            let add_btn = ui.add(egui::Button::new("Add"))
+                                .clicked();
+
+                            let enter_pressed = response.lost_focus() 
+                                && ui.input(|i| i.key_pressed(egui::Key::Enter));
+
+                            if add_btn || enter_pressed {
                                 if let Err(e) = self.try_add_new_note() {
                                     error!("Add failed: {e}");
                                 }
