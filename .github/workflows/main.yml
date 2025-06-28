@@ -58,7 +58,7 @@ jobs:
       with:
         version: latest
         files: |
-          target/release/nisabo
+          target/${{ matrix.target }}/release/nisabo
         args: --best --lzma
 
     # experimental part for UPX
@@ -68,7 +68,7 @@ jobs:
       with:
         version: latest
         files: |
-          target/release/nisabo.exe
+          target/${{ matrix.target }}/release/nisabo.exe
         args: --best --lzma
 
     - name: Create Release
