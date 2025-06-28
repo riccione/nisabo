@@ -11,6 +11,19 @@ Current state - development
   - `RUST_LOG=info cargo run`
   - `RUST_LOG=debug cargo run`
 
+### IMPORTANT
+
+I set up GitHub Actions to automatically compile the app, but they don't work as
+expected:
+- Windows: Defender falsely flags the build as a virus (even though VirusTotal
+  reports it clean).
+  Additionally, the build fails due to OpenGL issues.
+- Linux: Incompatibilities between different GLIBC versions cause problems, and statically linking
+  with musl does not fully resolve them.
+- MacOS: I have never tested it, but it is likely to have similar issues.
+
+So, general recommendation - build the app yourself :)
+
 ## License
 
 This project is licensed under the MIT License.
