@@ -18,12 +18,21 @@ impl App {
                     }
 
                     ui.horizontal(|ui| {
-                        ui.text_edit_singleline(&mut self.rename_input);
+                        
+                        let response = ui.add(
+                            egui::TextEdit::singleline(&mut self.rename_input));
+                            //ui.text_edit_singleline(&mut self.rename_input);
                         
                         if self.rename_input.trim().is_empty() {
                             self.rename_error = Some("Name cannot be empty".to_string());
                         } else {
-                            if ui.button("Rename").clicked() {
+                            let rename_btn = ui.add(egui::Button::new("Rename"))
+                                .clicked();
+
+                            let enter_pressed = response.lost_focus() 
+                                && ui.input(|i| i.key_pressed(egui::Key::Enter));
+
+                            if rename_btn || enter_pressed {
                                 if let Err(e) = self.try_rename_note() {
                                     error!("Rename failed: {e}");
                                 }
