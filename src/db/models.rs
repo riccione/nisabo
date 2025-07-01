@@ -41,6 +41,14 @@ pub struct NoteLinkIds {
     pub target_note_id: i64,
 }
 
+#[derive(Debug)]
+pub struct NoteDiff {
+    pub id: i64,
+    pub version: i32,
+    pub diff: String,
+    pub changed_at: String,
+}
+
 impl std::str::FromStr for LinkType {
     type Err = ();
 
