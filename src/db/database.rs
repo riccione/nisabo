@@ -58,6 +58,16 @@ impl Database {
                 FOREIGN KEY (target_note_id) REFERENCES note(id) ON DELETE CASCADE,
                 UNIQUE (source_note_id, target_note_id, link_type) -- prevents duplications
             );
+            
+            CREATE TABLE IF NOT EXISTS note_diff (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                note_id         INTEGER NOT NULL,
+                version         INTEGER,
+                name            TEXT NOT NULL,
+                content         TEXT,
+                changed_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (note_id) REFERENCES note(id) ON DELETE CASCADE
+            );
 
             CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5 (
                 id UNINDEXED,
