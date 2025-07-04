@@ -62,8 +62,6 @@ impl Database {
             CREATE TABLE IF NOT EXISTS note_diff (
                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
                 note_id         INTEGER NOT NULL,
-                version         INTEGER,
-                name            TEXT NOT NULL,
                 content         TEXT,
                 changed_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (note_id) REFERENCES note(id) ON DELETE CASCADE
@@ -384,8 +382,8 @@ impl Database {
         self.with_transaction(|tx| {
             tx.execute("
             INSERT INTO note_diff (
-                note_id, version, name, content, changed_at
-            ) VALUES (?1, 0, NULL, ?2, CURRENT_TIMESTAMP)
+                note_id, content, changed_at
+            ) VALUES (?1, ?2, CURRENT_TIMESTAMP)
             ",
             (id, content),
             )?;

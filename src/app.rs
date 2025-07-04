@@ -45,10 +45,8 @@ pub struct App {
     pub state_is_right_panel_on: bool,
     pub state_is_dark_mode: bool,
 
-    //pub state_export_progress: Option<f32>,
     pub import_done: Arc<AtomicBool>,
     pub state_exporting: bool,
-    //pub export_rx: Option<std::sync::mpsc::Receiver<f32>>,
     
     pub state_io_progress: Option<f32>,
     pub state_importing: bool,
@@ -107,10 +105,8 @@ impl App {
             state_is_right_panel_on: true,
             state_is_dark_mode: true,
 
-            // state_export_progress: None,
             import_done: Arc::new(AtomicBool::new(false)),
             state_exporting: false,
-            // export_rx: None,
             
             state_io_progress: None,
             state_importing: false,

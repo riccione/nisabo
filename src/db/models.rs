@@ -45,7 +45,7 @@ pub struct NoteLinkIds {
 pub struct NoteDiff {
     pub id: i64,
     pub version: i32,
-    pub diff: String,
+    pub content: String,
     pub changed_at: String,
 }
 
