@@ -384,7 +384,10 @@ impl Database {
             Ok(x) => x,
             Err(e) => {
                 eprintln!("No version value: {}", e);
-                return Err(e);
+                // if there are no records => Err(QueryReturnedNoRows)
+                // and we set version to 0
+                // it is an initial state
+                0
             }
         };
         version += 1;
