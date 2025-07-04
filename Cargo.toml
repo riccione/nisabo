@@ -27,3 +27,5 @@ rusqlite = { version = "0.36.0", features = ["bundled", "modern_sqlite"] }
 chrono = "0.4.41"
 pulldown-cmark = "0.13.0"
 egui_extras = { version = "0.31.1", features = ["all_loaders"] }
+serde_json = "1.0.140"
+similar = "2.7.0"
