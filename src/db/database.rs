@@ -1,5 +1,5 @@
 use rusqlite::{Connection, params, Transaction, Result};
-use crate::db::models::{LinkType, Note, NoteIdName, NoteLink, NoteLinkIds};
+use crate::db::models::{LinkType, Note, NoteIdName, NoteLink, NoteDiff,  NoteLinkIds};
 
 pub struct Database {
     conn: Connection,
@@ -62,7 +62,8 @@ impl Database {
             CREATE TABLE IF NOT EXISTS note_diff (
                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
                 note_id         INTEGER NOT NULL,
-                content         TEXT,
+                version         INTEGER,
+                diff            TEXT,
                 changed_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (note_id) REFERENCES note(id) ON DELETE CASCADE
             );
@@ -378,17 +379,70 @@ impl Database {
     }
 
     // draft
-    pub fn insert_note_diff(&mut self, id: i64, content: &str) -> Result<()> {
+    pub fn insert_note_diff(&mut self, note_id: i64, diff: &str) -> Result<()> {
+        let mut version = match self.select_latest_note_diff_version(note_id) {
+            Ok(x) => x,
+            Err(e) => {
+                eprintln!("No version value: {}", e);
+                return Err(e);
+            }
+        };
+        version += 1;
+        
         self.with_transaction(|tx| {
             tx.execute("
             INSERT INTO note_diff (
-                note_id, content, changed_at
-            ) VALUES (?1, ?2, CURRENT_TIMESTAMP)
+                note_id, version, diff, changed_at
+            ) VALUES (?1, ?2, ?3, CURRENT_TIMESTAMP)
             ",
-            (id, content),
+            (note_id, version, diff),
             )?;
 
             Ok(())
         })
+    }
+    
+    pub fn select_note_diff_ls(&mut self, note_id: i64) -> Result<Vec<NoteDiff>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, version, changed_at 
+            FROM note_diff 
+            WHERE note_id = ?1 
+            ORDER BY version"
+        )?;
+        let note_diff_iter = stmt.query_map(params![note_id], |row| {
+            Ok(NoteDiff {
+                id: row.get(0)?,
+                version: row.get(1)?,
+                diff: String::new(), // dummy value for the list
+                changed_at: row.get(2)?,
+            })
+        })?;
+        note_diff_iter.collect()
+    }
+
+    pub fn select_note_diff(&mut self, id: i64) -> Result<NoteDiff> {
+        self.conn.query_row(
+            "SELECT id, version, diff, changed_at FROM note_diff WHERE id = ?1",
+            [&id],
+            |row| {
+                Ok(NoteDiff {
+                    id: row.get(0)?,
+                    version: row.get(1)?,
+                    diff: row.get(2)?,
+                    changed_at: row.get(3)?,
+                })
+            },
+        )
+    }
+    
+    fn select_latest_note_diff_version(&mut self, note_id: i64) -> Result<i64> {
+        self.conn.query_row(
+            "SELECT version 
+            FROM note_diff WHERE note_id = ?1 
+            ORDER BY version DESC 
+            LIMIT 1",
+            [&note_id],
+            |row| row.get(0),
+        )
     }
 }
