@@ -378,4 +378,19 @@ impl Database {
         
         note_iter.collect()
     }
+
+    // draft
+    pub fn insert_note_diff(&mut self, id: i64, content: &str) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.execute("
+            INSERT INTO note_diff (
+                note_id, version, name, content, changed_at
+            ) VALUES (?1, 0, NULL, ?2, CURRENT_TIMESTAMP)
+            ",
+            (id, content),
+            )?;
+
+            Ok(())
+        })
+    }
 }
