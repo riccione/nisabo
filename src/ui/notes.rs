@@ -193,6 +193,10 @@ impl App {
             let mut db = crate::db::database::Database::new(&self.db_path)?;
             match db.update_note_content(id, &self.edited_content) {
                 Ok(_) => {
+                    let test = crate::diff::get_diff_json(
+                        &self.original_content,
+                        &self.edited_content);
+                    println!("JSON for test: {}", test);
                     println!("Saved successfully!");
                     self.original_content = self.edited_content.clone();
                 }

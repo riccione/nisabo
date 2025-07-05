@@ -9,6 +9,7 @@ mod io;
 mod constants;
 mod utils;
 mod font;
+mod diff;
 use app::App;
 
 fn main() -> Result<(), eframe::Error> {
