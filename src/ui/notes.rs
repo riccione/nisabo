@@ -223,4 +223,16 @@ impl App {
         }
         Ok(())
     }
+
+    // draft
+    fn try_save_note_diff(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        /*
+         * 1. create a diff using similar (self.original_content, self.edited_content)
+         * 2. do serde -> needed for saving it in human readable format in db
+         * 3. save diff to note_diff
+         *
+         *
+         */ 
+        Ok(())
+    }
 }
