@@ -217,7 +217,7 @@ impl App {
      */ 
     pub fn try_auto_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let autosave = self.config.autosave.unwrap_or(true);
-        if self.edited_note_id.is_some() && autosave {
+        if self.edited_note_id.is_some() && autosave && self.should_save() {
             let mut db = crate::db::database::Database::new(&self.db_path)?;
             match db.update_note_content(self.edited_note_id.unwrap(),  &self.edited_content) {
                 Ok(_) => {
