@@ -188,8 +188,12 @@ impl App {
         }
     }
 
+    pub fn should_save(&self) -> bool {
+        self.original_content != self.edited_content
+    }
+
     pub fn try_update_note_content(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(id) = self.selected_index {
+        if let Some(id) = self.selected_index && self.should_save() {
             let mut db = crate::db::database::Database::new(&self.db_path)?;
             match db.update_note_content(id, &self.edited_content) {
                 Ok(_) => {
