@@ -197,10 +197,7 @@ impl App {
             let mut db = crate::db::database::Database::new(&self.db_path)?;
             match db.update_note_content(id, &self.edited_content) {
                 Ok(_) => {
-                    let test = crate::diff::get_diff_json(
-                        &self.original_content,
-                        &self.edited_content);
-                    println!("JSON for test: {}", test);
+                    let _ = self.try_save_note_diff(id);
                     println!("Saved successfully!");
                     self.original_content = self.edited_content.clone();
                 }
@@ -221,6 +218,7 @@ impl App {
             let mut db = crate::db::database::Database::new(&self.db_path)?;
             match db.update_note_content(self.edited_note_id.unwrap(),  &self.edited_content) {
                 Ok(_) => {
+                    let _ = self.try_save_note_diff(self.edited_note_id.unwrap());
                     println!("Saved successfully!");
                     self.original_content = String::new(); 
                     self.edited_content = String::new();
@@ -233,7 +231,7 @@ impl App {
     }
 
     // draft
-    fn try_save_note_diff(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn try_save_note_diff(&mut self, note_id: i64) -> Result<(), Box<dyn std::error::Error>> {
         /*
          * 1. create a diff using similar (self.original_content, self.edited_content)
          * 2. do serde -> needed for saving it in human readable format in db
@@ -241,6 +239,16 @@ impl App {
          *
          *
          */ 
+        let json = crate::diff::get_diff_json(
+            &self.original_content,
+            &self.edited_content);
+        let mut db = crate::db::database::Database::new(&self.db_path)?;
+        match db.insert_note_diff(note_id, &json) {
+            Ok(_) => {
+                println!("Note diff saved successfully!");
+            }
+            Err(e) => eprintln!("Failed to save note diff: {e}"),
+        }
         Ok(())
     }
 }
