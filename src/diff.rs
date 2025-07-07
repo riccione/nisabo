@@ -56,7 +56,10 @@ fn deserialize(j: String) -> Result<Vec<Diff>, serde_json::Error> {
 
 /// s1 - current string
 /// v - diff
-/// TOOO: implement
+/// restores changes from the closest Diff, 
+/// to handle restoring changes from deeper Diff, need to run it in a loop.
+/// TODO: handle UI, run it in a background thread, as an idea - to simplify
+/// add each 10 or 5 diffs a full copy?
 fn restore_from_diff(s1: &str, v: &Vec<Diff>) -> String {
     let mut lines: Vec<String> = s1
         .lines()
