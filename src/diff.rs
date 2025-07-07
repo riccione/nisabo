@@ -54,6 +54,44 @@ fn deserialize(j: String) -> Result<Vec<Diff>, serde_json::Error> {
     serde_json::from_str(&j)
 }
 
+/// s1 - current string
+/// v - diff
+/// TOOO: implement
+fn restore_from_diff(s1: &str, v: &Vec<Diff>) -> String {
+    let mut lines: Vec<String> = s1
+        .lines()
+        .map(|x| x.to_string())
+        .collect();
+
+    let mut changes_rev = v.to_vec();
+    changes_rev.reverse();
+
+    for c in changes_rev {
+        match c.op.as_str() {
+            "+" => {
+                // Remove inserted lines from s1
+                let num_lines = c.value.lines().count();
+                if c.index + num_lines <= lines.len() {
+                    lines.splice(c.index..c.index + num_lines, std::iter::empty());
+                }
+            },
+            "-" => {
+                // Reinsert deleted lines into s1
+                let deleted_lines: Vec<String> = c.value
+                    .lines()
+                    .map(|x| x.to_string())
+                    .collect();
+                if c.index <= lines.len() {
+                    lines.splice(c.index..c.index, deleted_lines);
+                }
+            },
+            _ => {}
+        }
+    }
+
+    lines.join("\n")
+}
+
 pub fn get_diff_json(s1: &str, s2: &str) -> String {
     let diff = create_diff(s1, s2);
     let json = match serialize(diff) {
