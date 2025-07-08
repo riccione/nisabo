@@ -60,7 +60,8 @@ fn deserialize(j: String) -> Result<Vec<Diff>, serde_json::Error> {
 /// to handle restoring changes from deeper Diff, need to run it in a loop.
 /// TODO: handle UI, run it in a background thread, as an idea - to simplify
 /// add each 10 or 5 diffs a full copy?
-fn restore_from_diff(s1: &str, v: &Vec<Diff>) -> String {
+/// apply diff on s2 to make s1 = backward path
+fn backward_diff(s1: &str, v: &Vec<Diff>) -> String {
     let mut lines: Vec<String> = s1
         .lines()
         .map(|x| x.to_string())
@@ -89,6 +90,38 @@ fn restore_from_diff(s1: &str, v: &Vec<Diff>) -> String {
                 }
             },
             _ => {}
+        }
+    }
+
+    lines.join("\n")
+}
+
+/// apply diff on s1 to make s2 = forward path
+fn forward_diff(s1: &str, v: &Vec<Diff>) -> String {
+    let mut lines: Vec<String> = s1
+        .lines()
+        .map(|x| x.to_string())
+        .collect();
+
+    for c in v {
+        match c.op.as_str() {
+            "+" => {
+                let insert_lines: Vec<String> = c
+                    .value
+                    .lines()
+                    .map(|x| x.to_string())
+                    .collect();
+                if c.index <= lines.len() {
+                    lines.splice(c.index..c.index, insert_lines);
+                }
+            }
+            "-" => {
+                let num_lines = c.value.lines().count();
+                if c.index + num_lines <= lines.len() {
+                    lines.splice(c.index..c.index + num_lines, std::iter::empty());
+                }
+            }
+            _ => {} // Ignore unknown ops
         }
     }
 
