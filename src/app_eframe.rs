@@ -2,7 +2,7 @@ use eframe::egui::{self, Button, Color32, Key, RichText};
 use log::{info};
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use crate::ui::about::show_about;
-use crate::app::{App};
+use crate::app::{App, ProgressState};
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
@@ -35,6 +35,11 @@ impl eframe::App for App {
                     self.state_importing = false;
                     self.state_exporting = false;
                     self.io_rx = None;
+                    self.io_result = true;
+                    self.state_progress = ProgressState::Completed("Message".to_string());
+                    
+                } else {
+                    self.state_progress = ProgressState::InProgress(progress);
                 }
             }
         }
@@ -45,16 +50,41 @@ impl eframe::App for App {
                 "Exporting notes..",
                 "Export in progress. Please wait..",
                 self.state_io_progress,
+                false,
             );
         }
         
-        if self.state_importing {
-            self.show_progress_window(
-                ctx,
-                "Importing notes..",
-                "Import in progress. Please wait..",
-                self.state_io_progress,
-            );
+        if self.state_importing || self.io_result {
+            match self.state_progress {
+                ProgressState::InProgress(progress) => {
+                    self.show_progress_window(
+                        ctx,
+                        "Importing notes..",
+                        "Import in progress. Please wait..",
+                        self.state_io_progress,
+                        false,
+                    );
+                }
+                ProgressState::Completed(ref msg) => {
+                    self.show_progress_window(
+                        ctx,
+                        "Importing notes..",
+                        "Import completed",
+                        None,
+                        true,
+                    );
+                }
+                ProgressState::Failed(ref msg) => {
+                    self.show_progress_window(
+                        ctx,
+                        "Importing notes..",
+                        "Error: import failed",
+                        None,
+                        true,
+                    );
+                }
+                ProgressState::Idle => {}
+            }
         }
 
         if self.import_done.load(Ordering::Relaxed) {

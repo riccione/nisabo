@@ -16,6 +16,15 @@ pub enum SidebarTab {
     Trash,
 }
 
+#[derive(Debug, Default)]
+pub enum ProgressState {
+    #[default]
+    Idle,               // not shown
+    InProgress(f32),
+    Completed(String),  // result
+    Failed(String),    // error
+}
+
 #[derive(Default)]
 pub struct App {
     pub db_path: String, // TODO: remove, use config.last... instead
@@ -51,6 +60,9 @@ pub struct App {
     pub state_io_progress: Option<f32>,
     pub state_importing: bool,
     pub io_rx: Option<std::sync::mpsc::Receiver<f32>>,
+
+    pub state_progress: ProgressState,
+    pub io_result: bool,
 
     pub names: Vec<NoteIdName>,
     pub status_error: String,
@@ -113,6 +125,9 @@ impl App {
             state_io_progress: None,
             state_importing: false,
             io_rx: None,
+
+            state_progress: ProgressState::Idle,
+            io_result: false,
 
             names: Vec::<NoteIdName>::new(),
             status_error: String::new(),
@@ -256,6 +271,7 @@ impl App {
         title: &str,
         message: &str,
         progress: Option<f32>,
+        show_close_btn: bool,
     ) {
         egui::Window::new(title)
             .collapsible(false)
@@ -265,6 +281,13 @@ impl App {
                 ui.label(message);
                 if let Some(progress) = progress {
                     ui.add(egui::ProgressBar::new(progress).show_percentage());
+                }
+
+                if show_close_btn {
+                    if ui.button("Close").clicked() {
+                        self.state_progress = ProgressState::Idle;
+                        self.io_result = false;
+                    }
                 }
             });
     }
