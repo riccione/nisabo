@@ -60,6 +60,8 @@ pub struct App {
     pub search_has_focus: bool,
     pub current_font: String,
     pub font_manager: FontManager,
+
+    pub state_history_open: bool,
 }
 
 impl Default for SidebarTab {
@@ -120,6 +122,8 @@ impl App {
             search_has_focus: false,
             current_font: String::new(),
             font_manager: FontManager::new(font_dir),
+
+            state_history_open: false,
         }
     }
 

@@ -61,7 +61,11 @@ impl eframe::App for App {
             self.import_done.store(false, Ordering::Relaxed); // reset
             self.load_rows = false; // trigger reload
         }
-        
+
+        if self.state_history_open {
+            self.show_history(ctx);
+        }
+
         if self.state_start {
             self.show_menubar(ctx);    
             // must be before sidepanels to reserve the space

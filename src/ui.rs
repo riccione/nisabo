@@ -11,3 +11,4 @@ pub mod modal_search;
 pub mod custom_button;
 pub mod notes;
 pub mod trash;
+pub mod modal_history;

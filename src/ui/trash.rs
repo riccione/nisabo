@@ -6,6 +6,9 @@ use crate::app::{App};
 impl App {
     pub fn show_trash(&mut self, ui: &mut egui::Ui) 
         -> Result<(), Box<dyn Error>> {
+        // clean up 
+        self.edited_note_id = None;
+
         if !self.state_trash_load {
             let db = crate::db::database::Database::new(&self.db_path)?;
             match db.get_trash() {

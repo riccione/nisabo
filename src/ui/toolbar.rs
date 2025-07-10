@@ -52,9 +52,14 @@ impl App {
                 ui.add_space(5.0);
 
                 toggle(ui, &mut self.state_is_right_panel_on);
+                
+                ui.add_space(5.0);
+
+                if ui.button("History").clicked() {
+                    self.state_history_open = true;
+                };
 
             });
         });
     }
-    
 }
