@@ -63,9 +63,10 @@ pub struct App {
 
     pub state_progress: ProgressState,
     pub io_result: bool,
+    pub io_status: String,
 
     pub names: Vec<NoteIdName>,
-    pub status_error: String,
+    pub status_error: String, // global error
     pub search_input: String,
     pub state_search: bool,
     pub search_result: Vec<Note>,
@@ -128,6 +129,7 @@ impl App {
 
             state_progress: ProgressState::Idle,
             io_result: false,
+            io_status: String::new(),
 
             names: Vec::<NoteIdName>::new(),
             status_error: String::new(),
@@ -279,6 +281,7 @@ impl App {
             .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
             .show(ctx, |ui| {
                 ui.label(message);
+                ui.label(&self.io_status);
                 if let Some(progress) = progress {
                     ui.add(egui::ProgressBar::new(progress).show_percentage());
                 }
@@ -287,6 +290,7 @@ impl App {
                     if ui.button("Close").clicked() {
                         self.state_progress = ProgressState::Idle;
                         self.io_result = false;
+                        self.io_status = String::new();
                     }
                 }
             });

@@ -2,12 +2,13 @@ use rfd::FileDialog;
 use std::fs;
 use std::error::Error;
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
-use crate::app::{App};
+use crate::app::{App, ProgressState};
 
 impl App {
     pub fn import(&mut self) -> Result<(), Box<dyn Error>> {
+
         if self.state_importing || self.state_exporting {
-            println!("call early exit");
+            // call early exit
             return Ok(()); // importing in progress, only one can be run!
         }
         
@@ -30,33 +31,64 @@ impl App {
             let total = entries.len().max(1); // prevents division to 0
             let db_path = self.db_path.clone();
 
-            std::thread::spawn(move || {                    
-            for (i, entry) in entries.iter().enumerate() {
-                    let path = entry.path();
+            let handle = std::thread::spawn(move || -> Result<(), String> {                    
+                for (i, entry) in entries.iter().enumerate() {
+                        let path = entry.path();
 
-                    if let Some(filename) = path.file_stem().and_then(|x| x.to_str()) {
-                            if let Ok(content) = fs::read_to_string(&path) {
-                                println!("{}: {}", filename, content);
-                                let mut db = match crate::db::database::Database::new(&db_path) {
-                                    Ok(db) => db,
-                                    Err(e) => {
-                                        eprintln!("Failed to connect to db: {}", e);
-                                        return;
+                        if let Some(filename) = path.file_stem().and_then(|x| x.to_str()) {
+                                if let Ok(content) = fs::read_to_string(&path) {
+                                    let mut db = match crate::db::database::Database::new(&db_path) {
+                                        Ok(db) => db,
+                                        Err(e) => {
+                                            let m = format!("Failed to connect to db: {}", e);
+                                            // eprintln!("Failed to connect to db: {}", e);
+                                            // return;
+                                            return Err(m);
+                                        }
+                                    };
+                                    
+                                    if let Err(e) = db.insert_note(&filename, &content) {
+                                        let m = format!("Failed to insert note {}: {}", filename, e);
+                                        // eprintln!("Failed to insert note: {}", e);
+                                        //return;
+                                        return Err(m);
                                     }
-                                };
-                                
-                                if let Err(e) = db.insert_note(&filename, &content) {
-                                    eprintln!("Failed to insert note: {}", e);
-                                }
+                            }
                         }
-                    }
-                    // progress
-                    tx.send((i+1) as f32 / total as f32).ok();
+                        // progress
+                        tx.send((i+1) as f32 / total as f32).ok();
+                }
+                import_done.store(true, Ordering::Relaxed);
+                Ok(())
+            });
+            let mut has_error = false;
+            let mut result = vec![];
+            match handle.join() {
+                Ok(Ok(())) => { // Success
+                    let m = format!("Successfully imported: {}", total);
+                    result.push(m);
+                },
+                Ok(Err(e)) => {
+                    has_error = true;
+                    result.push(e);
+                }
+                Err(e) => {
+                    has_error = true;
+                    result.push(format!("Thread panicked: {:?}", e));
+                }
             }
-            import_done.store(true, Ordering::Relaxed);
-                });
+            if !result.is_empty() {
+                self.io_status = result.join("\n");
+
+                if has_error {
+                    self.state_progress = ProgressState::Failed("Import failed".to_string());
+                } else {
+                    self.state_progress = ProgressState::Completed("Import completed".to_string());
+                }
+            }
         } else {
-        eprintln!("No directory selected");
+            self.status_error = "No directory selected".to_string();
+            // eprintln!("No directory selected");
         }
         self.load_rows = false;
         Ok(())

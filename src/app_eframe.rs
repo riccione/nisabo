@@ -36,7 +36,7 @@ impl eframe::App for App {
                     self.state_exporting = false;
                     self.io_rx = None;
                     self.io_result = true;
-                    self.state_progress = ProgressState::Completed("Message".to_string());
+                    self.state_progress = ProgressState::Completed("Done".to_string());
                     
                 } else {
                     self.state_progress = ProgressState::InProgress(progress);
