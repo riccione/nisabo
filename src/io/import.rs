@@ -2,7 +2,7 @@ use rfd::FileDialog;
 use std::fs;
 use std::error::Error;
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
-use crate::app::{App, ProgressState};
+use crate::app::{App, ProgressState, IoOperation};
 
 impl App {
     pub fn import(&mut self) -> Result<(), Box<dyn Error>> {
@@ -11,7 +11,7 @@ impl App {
             // call early exit
             return Ok(()); // importing in progress, only one can be run!
         }
-        
+
         if let Some(path) = FileDialog::new().pick_folder() {
             let (tx, rx) = std::sync::mpsc::channel::<f32>();
             self.io_rx = Some(rx);
@@ -30,6 +30,7 @@ impl App {
             
             let total = entries.len().max(1); // prevents division to 0
             let db_path = self.db_path.clone();
+            self.io_operation = Some(IoOperation::Import);
 
             let handle = std::thread::spawn(move || -> Result<(), String> {                    
                 for (i, entry) in entries.iter().enumerate() {

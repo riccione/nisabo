@@ -16,6 +16,11 @@ pub enum SidebarTab {
     Trash,
 }
 
+pub enum IoOperation {
+    Import,
+    Export,
+}
+
 #[derive(Debug, Default)]
 pub enum ProgressState {
     #[default]
@@ -56,6 +61,7 @@ pub struct App {
 
     pub import_done: Arc<AtomicBool>,
     pub state_exporting: bool,
+    pub io_operation: Option<IoOperation>,
     
     pub state_io_progress: Option<f32>,
     pub state_importing: bool,
@@ -122,6 +128,7 @@ impl App {
 
             import_done: Arc::new(AtomicBool::new(false)),
             state_exporting: false,
+            io_operation: None,
             
             state_io_progress: None,
             state_importing: false,
@@ -291,8 +298,25 @@ impl App {
                         self.state_progress = ProgressState::Idle;
                         self.io_result = false;
                         self.io_status = String::new();
+                        self.io_operation = None;
                     }
                 }
             });
+    }
+
+    pub fn io_labels(&self) -> (&'static str, &'static str, &'static str) {
+        match self.io_operation {
+            Some(IoOperation::Import) => (
+                "Importing notes..",
+                "Import in progress. Please wait..",
+                "Import failed",
+            ),
+            Some(IoOperation::Export) => (
+                "Exporting notes..",
+                "Export in progress. Please wait..",
+                "Export failed",
+            ),
+            None => ("", "", ""),
+        }
     }
 }

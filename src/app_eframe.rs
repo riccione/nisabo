@@ -31,6 +31,7 @@ impl eframe::App for App {
         if let Some(rx) = &self.io_rx {
             if let Ok(progress) = rx.try_recv() {
                 self.state_io_progress = Some(progress);
+
                 if progress >= 1.0 {
                     self.state_importing = false;
                     self.state_exporting = false;
@@ -54,6 +55,42 @@ impl eframe::App for App {
             );
         }
         
+        if self.io_operation.is_some() || self.io_result {
+            let state_progress = &self.state_progress;
+            let (title, in_progress, failed) = self.io_labels();
+
+            match state_progress {
+                ProgressState::InProgress(progress) => {
+                    self.show_progress_window(
+                        ctx,
+                        title,
+                        in_progress,
+                        self.state_io_progress,
+                        false,
+                    );
+                }
+                ProgressState::Completed(_) => {
+                    self.show_progress_window(
+                        ctx,
+                        title,
+                        "Operation completed",
+                        None,
+                        true,
+                    );
+                }
+                ProgressState::Failed(_) => {
+                    self.show_progress_window(
+                        ctx,
+                        title,
+                        failed,
+                        None,
+                        true,
+                    );
+                }
+                ProgressState::Idle => {}
+            }
+        }
+        /*
         if self.state_importing || self.io_result {
             match self.state_progress {
                 ProgressState::InProgress(progress) => {
@@ -86,6 +123,7 @@ impl eframe::App for App {
                 ProgressState::Idle => {}
             }
         }
+        */
 
         if self.import_done.load(Ordering::Relaxed) {
             self.import_done.store(false, Ordering::Relaxed); // reset

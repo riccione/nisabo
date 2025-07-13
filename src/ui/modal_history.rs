@@ -1,8 +1,6 @@
-use eframe::egui::{self, TextEdit, Frame, Sense, Label, RichText, Layout, Align};
-use log::{info, error};
+use eframe::egui::{self};
 use crate::app::{App};
 use crate::constants::RESULT_SUCCESS;
-use crate::ui::custom_button::left_aligned_button;
 
 impl App {
     pub fn show_history(&mut self, ctx: &egui::Context) {
@@ -14,6 +12,13 @@ impl App {
                 ui.horizontal(|ui| {
                     let id = self.edited_note_id;
                     ui.label(format!("{:?}", id));
+                    // split history window to 2 panels
+                    // left - show list of diffs
+                    // right - show selected diff
+                    // load list of diffs from the db
+                    // add capability to select the diff and display it content
+                    // inside the window
+                    // add a button - Restore
                 });
         });
         if !open {

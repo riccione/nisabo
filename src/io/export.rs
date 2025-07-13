@@ -4,8 +4,9 @@ use std::path::Path;
 use std::io::Write;
 use std::error::Error;
 use log::{info, error};
-use crate::app::{App};
+use crate::app::{App, IoOperation};
 use pulldown_cmark::{Parser, Options, html};
+use crate::db::models::Note;
 
 impl App {
     pub fn export(&mut self, target: &str) -> Result<(), Box<dyn Error>> {
@@ -25,26 +26,48 @@ impl App {
                 let full_path = Path::new(&path).join("exported");
                 fs::create_dir_all(&full_path)?;
                 println!("Dir created at: {:?}", full_path);
-                
-                    let db = crate::db::database::Database::new(&self.db_path)?;
-                    let notes = db.get_all_notes()?;
-                    let total = notes.len().max(1); // prevent division by 0
-                    let format = target.to_string(); // to fix borrow issue
-                    
-                    std::thread::spawn(move || {                    
-                        for (i, note) in notes.into_iter().enumerate() {
-                            let safe_name = sanitize(&note.name);
-                            let file_path = full_path.join(format!("{safe_name}.{format}"));
 
-                            let mut file = match File::create(&file_path) {
-                                Ok(f) => f,
-                                Err(e) => {
-                                    eprintln!("Failed to create file {:?}: {}", file_path, e);
-                                    return;
-                                }
+                let db = crate::db::database::Database::new(&self.db_path)?;
+                let notes = db.get_all_notes()?;
+                let total = notes.len().max(1); // prevent division by 0
+                let format = target.to_string(); // to fix borrow issue
+                
+                self.io_operation = Some(IoOperation::Export);
+                let handle = std::thread::spawn(move || {                    
+                    for (i, note) in notes.into_iter().enumerate() {
+                        let safe_name = sanitize(&note.name);
+                        let file_path = full_path.join(format!("{safe_name}.{format}"));
+
+                        let mut file = match File::create(&file_path) {
+                            Ok(f) => f,
+                            Err(e) => {
+                                eprintln!("Failed to create file {:?}: {}", file_path, e);
+                                return;
+                            }
+                        };
+                        
+                        let data = format_note_as_md(&note);
+                            let output = match format.as_str() {
+                                "html" => md_to_html(&data),
+                                _ => data,
                             };
-                           
-                            let data = format!(r#"---
+                            match file.write_all(output.as_bytes()) {
+                                Ok(_) => info!("Html file saved: {safe_name}"),
+                                Err(e) => eprintln!("Failed to save {safe_name}: {e}"),
+                            }
+                            // progress
+                            tx.send((i+1) as f32 / total as f32).ok();
+                        }
+                    });
+        } else {
+            self.status_error = "No directory selected".to_string();
+        }
+        Ok(())
+    }
+}
+
+fn format_note_as_md(note: &Note) -> String {
+format!(r#"---
 title: "{name}"
 
 date: {created}
@@ -59,31 +82,14 @@ draft: false
 
 {content}
 "#,
-                                name = note.name,
-                                content = &note.content.unwrap_or(String::from("")),
-                                created = note.created_at,
-                                updated = note.updated_at,
-                                deleted = note.deleted_at.unwrap_or("NA".to_string())
-                            );
-                            
-                            let output = match format.as_str() {
-                                "html" => md_to_html(&data),
-                                _ => data,
-                            };
-                            match file.write_all(output.as_bytes()) {
-                                Ok(_) => info!("Html file saved: {safe_name}"),
-                                Err(e) => eprintln!("Failed to save {safe_name}: {e}"),
-                            }
-                            // progress
-                            tx.send((i+1) as f32 / total as f32).ok();
-                        }
-                    });
-        } else {
-            error!("No directory selected");
-        }
-        Ok(())
-    }
+    name = note.name,
+    content = &note.content.clone().unwrap_or(String::from("")),
+    created = note.created_at,
+    updated = note.updated_at,
+    deleted = note.deleted_at.clone().unwrap_or("NA".to_string())
+    )
 }
+
 fn sanitize(s: &str) -> String {
     let mut x = s.replace("/", "_")
         .replace(" ", "_");
