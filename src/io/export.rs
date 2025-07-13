@@ -28,7 +28,7 @@ impl App {
                 println!("Dir created at: {:?}", full_path);
 
                 let db = crate::db::database::Database::new(&self.db_path)?;
-                let notes = db.get_all_notes()?;
+                let notes = db.get_all_not_empty_notes()?;
                 let total = notes.len().max(1); // prevent division by 0
                 let format = target.to_string(); // to fix borrow issue
 

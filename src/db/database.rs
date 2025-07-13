@@ -353,6 +353,32 @@ impl Database {
 
         Ok(notes)
     }
+    
+    pub fn get_all_not_empty_notes(&self) -> Result<Vec<Note>> {
+        let mut x = self.conn.prepare("
+            SELECT * 
+            FROM note  
+            WHERE deleted_at IS NULL AND content IS NOT NULL AND content <> ''
+            ")?;
+        
+        let iter = x.query_map([], |row| {
+            Ok(Note {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                content: row.get(2)?,
+                created_at: row.get(3)?,
+                updated_at: row.get(4)?,
+                deleted_at: row.get(5)?,
+            })
+        })?;
+
+        let mut notes = Vec::new();
+        for y in iter {
+            notes.push(y?);
+        }
+
+        Ok(notes)
+    }
 
     pub fn search(&self, query: &str) -> Result<Vec<Note>> {
         let mut stmt = self.conn.prepare(
