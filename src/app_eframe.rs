@@ -44,7 +44,7 @@ impl eframe::App for App {
                 }
             }
         }
-
+/*
         if self.state_exporting {
             self.show_progress_window(
                 ctx,
@@ -54,7 +54,7 @@ impl eframe::App for App {
                 false,
             );
         }
-        
+*/        
         if self.io_operation.is_some() || self.io_result {
             let state_progress = &self.state_progress;
             let (title, in_progress, failed) = self.io_labels();

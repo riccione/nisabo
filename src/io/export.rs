@@ -4,7 +4,7 @@ use std::path::Path;
 use std::io::Write;
 use std::error::Error;
 use log::{info, error};
-use crate::app::{App, IoOperation};
+use crate::app::{App, IoOperation, ProgressState};
 use pulldown_cmark::{Parser, Options, html};
 use crate::db::models::Note;
 
@@ -31,18 +31,23 @@ impl App {
                 let notes = db.get_all_notes()?;
                 let total = notes.len().max(1); // prevent division by 0
                 let format = target.to_string(); // to fix borrow issue
-                
+
                 self.io_operation = Some(IoOperation::Export);
-                let handle = std::thread::spawn(move || {                    
+                let handle = std::thread::spawn(move || -> Result<usize, String> {                    
+                    let mut actual = 0;
+
                     for (i, note) in notes.into_iter().enumerate() {
                         let safe_name = sanitize(&note.name);
-                        let file_path = full_path.join(format!("{safe_name}.{format}"));
+                        // solving same name issue by adding _{i}
+                        let file_path = full_path.join(format!("{safe_name}_{i}.{format}"));
 
                         let mut file = match File::create(&file_path) {
                             Ok(f) => f,
                             Err(e) => {
-                                eprintln!("Failed to create file {:?}: {}", file_path, e);
-                                return;
+                                //eprintln!("Failed to create file {:?}: {}", file_path, e);
+                                let m = format!("Failed to create a file {:?}: {}", file_path, e);
+                                return Err(m);
+                                // return;
                             }
                         };
                         
@@ -52,13 +57,46 @@ impl App {
                                 _ => data,
                             };
                             match file.write_all(output.as_bytes()) {
-                                Ok(_) => info!("Html file saved: {safe_name}"),
-                                Err(e) => eprintln!("Failed to save {safe_name}: {e}"),
+                                Ok(_) => {
+                                    actual += 1;
+                                    info!("Html file saved: {safe_name}");
+                                }
+                                Err(e) => {
+                                    let m = format!("Failed to save {safe_name}: {e}");
+                                    return Err(m);
+                                    // eprintln!("Failed to save {safe_name}: {e}"),
+                                }
                             }
                             // progress
                             tx.send((i+1) as f32 / total as f32).ok();
                         }
-                    });
+                    Ok(actual)
+                });
+            let mut has_error = false;
+            let mut result = vec![];
+            match handle.join() {
+                Ok(Ok(actual)) => { // Success
+                    let m = format!("Successfully exported from {}: {}", total, actual);
+                    result.push(m);
+                },
+                Ok(Err(e)) => {
+                    has_error = true;
+                    result.push(e);
+                }
+                Err(e) => {
+                    has_error = true;
+                    result.push(format!("Thread panicked: {:?}", e));
+                }
+            }
+            if !result.is_empty() {
+                self.io_status = result.join("\n");
+
+                if has_error {
+                    self.state_progress = ProgressState::Failed("Export failed".to_string());
+                } else {
+                    self.state_progress = ProgressState::Completed("Export completed".to_string());
+                }
+            }
         } else {
             self.status_error = "No directory selected".to_string();
         }
