@@ -28,8 +28,8 @@ impl eframe::App for App {
         }
       
         // io: export && import
-        if let Some(rx) = &self.io_rx {
-            if let Ok(progress) = rx.try_recv() {
+        if let Some(rx) = self.io_rx.take() {
+            while let Ok(progress) = rx.try_recv() {
                 self.state_io_progress = Some(progress);
 
                 if progress >= 1.0 {
@@ -44,17 +44,7 @@ impl eframe::App for App {
                 }
             }
         }
-/*
-        if self.state_exporting {
-            self.show_progress_window(
-                ctx,
-                "Exporting notes..",
-                "Export in progress. Please wait..",
-                self.state_io_progress,
-                false,
-            );
-        }
-*/        
+        
         if self.io_operation.is_some() || self.io_result {
             let state_progress = &self.state_progress;
             let (title, in_progress, failed) = self.io_labels();
