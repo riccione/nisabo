@@ -7,7 +7,7 @@ use crate::app::{App, ProgressState, IoOperation};
 impl App {
     pub fn import(&mut self) -> Result<(), Box<dyn Error>> {
 
-        if self.state_importing || self.state_exporting {
+        if let ProgressState::InProgress(_) = self.state_progress {
             // call early exit
             return Ok(()); // importing in progress, only one can be run!
         }

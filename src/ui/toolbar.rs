@@ -55,7 +55,9 @@ impl App {
                 
                 ui.add_space(5.0);
 
-                if ui.button("History").clicked() {
+                let is_enabled = self.edited_note_id.is_some();
+                if ui.add_enabled(is_enabled, egui::Button::new("History")).
+                    clicked() {
                     self.state_history_open = true;
                 };
 

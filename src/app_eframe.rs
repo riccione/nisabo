@@ -33,8 +33,8 @@ impl eframe::App for App {
                 self.state_io_progress = Some(progress);
 
                 if progress >= 1.0 {
-                    self.state_importing = false;
-                    self.state_exporting = false;
+                    // self.state_importing = false;
+                    // self.state_exporting = false;
                     self.io_rx = None;
                     self.io_result = true;
                     self.state_progress = ProgressState::Completed("Done".to_string());

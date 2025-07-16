@@ -10,9 +10,19 @@ impl App {
             .resizable(false)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    let id = self.edited_note_id;
-                    ui.label(format!("{:?}", id));
-                    // split history window to 2 panels
+                    // left
+                    ui.vertical(|ui| {
+                        let id = self.edited_note_id;
+                        ui.label(format!("{:?}", id));
+                        ui.label("History list");
+                    });
+
+                    ui.separator();
+
+                    //right
+                    ui.vertical(|ui| {
+                        ui.label("Current diff");
+                    });
                     // left - show list of diffs
                     // right - show selected diff
                     // load list of diffs from the db
