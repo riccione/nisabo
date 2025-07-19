@@ -6,7 +6,7 @@ use std::error::Error;
 use eframe::egui;
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 // replace NoteIdName to Note
-use crate::db::models::{NoteIdName, Note};
+use crate::db::models::{NoteIdName, Note, NoteDiff};
 use crate::font::FontManager;
 use crate::constants::{DEFAULT_FONT_DIR, DEFAULT_FONT};
 
@@ -81,6 +81,7 @@ pub struct App {
     pub font_manager: FontManager,
 
     pub state_history_open: bool,
+    pub history_ls: Vec<NoteDiff>,
 }
 
 impl Default for SidebarTab {
@@ -148,6 +149,7 @@ impl App {
             font_manager: FontManager::new(font_dir),
 
             state_history_open: false,
+            history_ls: Vec::<NoteDiff>::new(),
         }
     }
 
