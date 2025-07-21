@@ -82,6 +82,7 @@ pub struct App {
 
     pub state_history_open: bool,
     pub history_ls: Vec<NoteDiff>,
+    pub history_curr: NoteDiff,
 }
 
 impl Default for SidebarTab {
@@ -150,6 +151,7 @@ impl App {
 
             state_history_open: false,
             history_ls: Vec::<NoteDiff>::new(),
+            history_curr: NoteDiff::default(),
         }
     }
 

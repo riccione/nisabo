@@ -41,7 +41,7 @@ pub struct NoteLinkIds {
     pub target_note_id: i64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, PartialEq)]
 pub struct NoteDiff {
     pub id: i64,
     pub version: i32,
