@@ -54,6 +54,29 @@ fn deserialize(j: String) -> Result<Vec<Diff>, serde_json::Error> {
     serde_json::from_str(&j)
 }
 
+pub fn json_to_human(j: &str) -> String {
+    let dj = deserialize(j.to_string());
+    // format to human-readable string
+    match dj {
+        Ok(diffs) => {
+            let mut ss = String::new();
+            for x in diffs {
+                let value = if x.value.trim().is_empty() {
+                    "(newline)".to_string()
+                } else {
+                    x.value.trim_end().to_string()
+                };
+                ss += &format!("At index {}: {} '{}'\n",
+                               x.index,
+                               x.op,
+                               value); 
+            }
+            ss
+        }
+        Err(e) => format!("Failed to parse JSON: {}", e),
+    }
+}
+
 /// s1 - current string
 /// v - diff
 /// restores changes from the closest Diff, 
