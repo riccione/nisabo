@@ -30,6 +30,13 @@ pub enum ProgressState {
     Failed(String),    // error
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum LoadState {
+    NotStarted,
+    Loaded,
+    Failed(String),
+}
+
 #[derive(Default)]
 pub struct App {
     pub db_path: String, // TODO: remove, use config.last... instead
@@ -84,11 +91,19 @@ pub struct App {
     pub history_ls: Vec<NoteDiff>,
     pub history_curr: NoteDiff,
     pub history_loaded_id: Option<i64>,
+    pub state_history_list: LoadState,
+    pub state_history: LoadState,
 }
 
 impl Default for SidebarTab {
     fn default() -> Self {
         SidebarTab::Notes
+    }
+}
+
+impl Default for LoadState {
+    fn default() -> Self {
+        LoadState::NotStarted
     }
 }
 
@@ -154,6 +169,8 @@ impl App {
             history_ls: Vec::<NoteDiff>::new(),
             history_curr: NoteDiff::default(),
             history_loaded_id: None,
+            state_history_list: LoadState::NotStarted,
+            state_history: LoadState::NotStarted,
         }
     }
 

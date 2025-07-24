@@ -1,5 +1,5 @@
 use eframe::egui::{self};
-use crate::app::{App};
+use crate::app::{App, LoadState};
 use crate::db::models::{NoteDiff};
 use crate::constants::RESULT_SUCCESS;
 use crate::diff::{json_to_human};
@@ -29,12 +29,18 @@ impl App {
                                 for x in &self.history_ls {
                                     let f = format!("{}. {}", x.version, x.changed_at);
                                     if ui.button(f).clicked() {
+                                        self.state_history = LoadState::NotStarted;
                                         println!("Clicked on diff: {}", x.id);
                                         selected_id = Some(x.id);
                                     };
                                 }
-                                if let Some(id) = selected_id {
-                                    let _ = self.try_get_curr_history(id);
+                                if self.state_history == LoadState::NotStarted {
+                                    if let Some(id) = selected_id {
+                                        // let _ = self.try_get_curr_history(id);
+                                        if self.try_get_curr_history(id).is_ok() {
+                                            self.state_history = LoadState::Loaded;
+                                        }
+                                    }
                                 }
                             } else {
                                 ui.label("No history");
@@ -69,6 +75,7 @@ impl App {
             self.history_ls.clear(); // clear history vector
             self.history_curr = NoteDiff::default();
             // TODO: add clear for data here
+            self.state_history = LoadState::NotStarted;
         }
     }
 
@@ -88,6 +95,7 @@ impl App {
     
     fn try_get_curr_history(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         let mut db = crate::db::database::Database::new(&self.db_path)?;
+        println!("request to db for history");
         match db.select_note_diff(id) {
             Ok(x) => {
                 self.history_curr = x;
