@@ -29,18 +29,12 @@ impl App {
                                 for x in &self.history_ls {
                                     let f = format!("{}. {}", x.version, x.changed_at);
                                     if ui.button(f).clicked() {
-                                        self.state_history = LoadState::NotStarted;
                                         println!("Clicked on diff: {}", x.id);
                                         selected_id = Some(x.id);
                                     };
                                 }
-                                if self.state_history == LoadState::NotStarted {
-                                    if let Some(id) = selected_id {
-                                        // let _ = self.try_get_curr_history(id);
-                                        if self.try_get_curr_history(id).is_ok() {
-                                            self.state_history = LoadState::Loaded;
-                                        }
-                                    }
+                                if let Some(id) = selected_id {
+                                    let _ = self.try_get_curr_history(id);
                                 }
                             } else {
                                 ui.label("No history");
@@ -75,7 +69,6 @@ impl App {
             self.history_ls.clear(); // clear history vector
             self.history_curr = NoteDiff::default();
             // TODO: add clear for data here
-            self.state_history = LoadState::NotStarted;
         }
     }
 

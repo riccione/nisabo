@@ -92,7 +92,6 @@ pub struct App {
     pub history_curr: NoteDiff,
     pub history_loaded_id: Option<i64>,
     pub state_history_list: LoadState,
-    pub state_history: LoadState,
 }
 
 impl Default for SidebarTab {
@@ -170,7 +169,6 @@ impl App {
             history_curr: NoteDiff::default(),
             history_loaded_id: None,
             state_history_list: LoadState::NotStarted,
-            state_history: LoadState::NotStarted,
         }
     }
 
