@@ -153,6 +153,25 @@ impl eframe::App for App {
                 self.show_search(ctx);
             }
 
+            if self.show_delete_confirmation {
+                egui::Window::new("Confirm Delete")
+                    .collapsible(false)
+                    .show(ctx, |ui| {
+                        ui.label("Are you sure you want to delete this note permanently?");
+                        if ui.button("Yes").clicked() {
+                            if let Some(id) = self.trash_pending_delete_id {
+                                let _ = self.permanently_delete(id);
+                            }
+                            self.show_delete_confirmation = false;
+                            self.trash_pending_delete_id = None;
+                        }
+                        if ui.button("Cancel").clicked() {
+                            self.trash_pending_delete_id = None;
+                            self.show_delete_confirmation = false;
+                        }
+                    });
+            }
+
         } else {
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.vertical_centered(|ui| {

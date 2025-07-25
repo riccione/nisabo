@@ -54,7 +54,9 @@ impl App {
                         }
 
                         if ui.button("Permanently Delete").clicked() {
-                            let _ = self.try_permanently_delete(id);
+                            self.show_delete_confirmation = true;
+                            self.trash_pending_delete_id = Some(id);
+                            // let _ = self.try_permanently_delete(id);
                             ui.close_menu();
                         }
                         
@@ -67,6 +69,10 @@ impl App {
             });
         }
         Ok(()) 
+    }
+
+    pub fn permanently_delete(&mut self, id: i64) {
+        let _ = self.try_permanently_delete(id);
     }
 
     fn try_restore_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {

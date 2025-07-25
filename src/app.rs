@@ -91,6 +91,9 @@ pub struct App {
     pub history_ls: Vec<NoteDiff>,
     pub history_curr: NoteDiff,
     pub history_loaded_id: Option<i64>,
+
+    pub show_delete_confirmation: bool,
+    pub trash_pending_delete_id: Option<i64>,
 }
 
 impl Default for SidebarTab {
@@ -167,6 +170,9 @@ impl App {
             history_ls: Vec::<NoteDiff>::new(),
             history_curr: NoteDiff::default(),
             history_loaded_id: None,
+
+            show_delete_confirmation: false,
+            trash_pending_delete_id: None,
         }
     }
 
