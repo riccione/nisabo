@@ -29,7 +29,7 @@ impl App {
                                 for x in &self.history_ls {
                                     let f = format!("{}. {}", x.version, x.changed_at);
                                     if ui.button(f).clicked() {
-                                        println!("Clicked on diff: {}", x.id);
+                                        // println!("Clicked on diff: {}", x.id);
                                         selected_id = Some(x.id);
                                     };
                                 }
@@ -49,7 +49,6 @@ impl App {
 
                     //right
                     ui.vertical(|ui| {
-                        println!("{:?}", self.history_curr);
                         if self.history_curr != NoteDiff::default() {
                             let diff = json_to_human(&self.history_curr.diff);
                             ui.label(format!("Version: {}", self.history_curr.version));
@@ -58,8 +57,6 @@ impl App {
                         }
                     });
                     }
-                    // load list of diffs from the db
-                    // add capability to select the diff and display it content
                     // inside the window
                     // add a button - Restore
                 });
@@ -88,7 +85,6 @@ impl App {
     
     fn try_get_curr_history(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {
         let mut db = crate::db::database::Database::new(&self.db_path)?;
-        println!("request to db for history");
         match db.select_note_diff(id) {
             Ok(x) => {
                 self.history_curr = x;

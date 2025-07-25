@@ -91,7 +91,6 @@ pub struct App {
     pub history_ls: Vec<NoteDiff>,
     pub history_curr: NoteDiff,
     pub history_loaded_id: Option<i64>,
-    pub state_history_list: LoadState,
 }
 
 impl Default for SidebarTab {
@@ -168,7 +167,6 @@ impl App {
             history_ls: Vec::<NoteDiff>::new(),
             history_curr: NoteDiff::default(),
             history_loaded_id: None,
-            state_history_list: LoadState::NotStarted,
         }
     }
 
