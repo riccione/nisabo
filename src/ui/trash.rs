@@ -61,7 +61,8 @@ impl App {
                         }
                         
                         if ui.button("Empty trash").clicked() {
-                            let _ = self.try_permanently_delete_all();
+                            self.show_empty_trash_confirmation = true;
+                            // let _ = self.try_permanently_delete_all();
                             ui.close_menu();
                         }
                     });
@@ -73,6 +74,10 @@ impl App {
 
     pub fn permanently_delete(&mut self, id: i64) {
         let _ = self.try_permanently_delete(id);
+    }
+    
+    pub fn empty_trash(&mut self) {
+        let _ = self.try_permanently_delete_all();
     }
 
     fn try_restore_note(&mut self, id: i64) -> Result<(), Box<dyn std::error::Error>> {

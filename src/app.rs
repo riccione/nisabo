@@ -94,6 +94,7 @@ pub struct App {
 
     pub show_delete_confirmation: bool,
     pub trash_pending_delete_id: Option<i64>,
+    pub show_empty_trash_confirmation: bool,
 }
 
 impl Default for SidebarTab {
@@ -173,6 +174,7 @@ impl App {
 
             show_delete_confirmation: false,
             trash_pending_delete_id: None,
+            show_empty_trash_confirmation: false,
         }
     }
 

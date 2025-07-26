@@ -80,40 +80,6 @@ impl eframe::App for App {
                 ProgressState::Idle => {}
             }
         }
-        /*
-        if self.state_importing || self.io_result {
-            match self.state_progress {
-                ProgressState::InProgress(progress) => {
-                    self.show_progress_window(
-                        ctx,
-                        "Importing notes..",
-                        "Import in progress. Please wait..",
-                        self.state_io_progress,
-                        false,
-                    );
-                }
-                ProgressState::Completed(ref msg) => {
-                    self.show_progress_window(
-                        ctx,
-                        "Importing notes..",
-                        "Import completed",
-                        None,
-                        true,
-                    );
-                }
-                ProgressState::Failed(ref msg) => {
-                    self.show_progress_window(
-                        ctx,
-                        "Importing notes..",
-                        "Error: import failed",
-                        None,
-                        true,
-                    );
-                }
-                ProgressState::Idle => {}
-            }
-        }
-        */
 
         if self.import_done.load(Ordering::Relaxed) {
             self.import_done.store(false, Ordering::Relaxed); // reset
@@ -168,6 +134,21 @@ impl eframe::App for App {
                         if ui.button("Cancel").clicked() {
                             self.trash_pending_delete_id = None;
                             self.show_delete_confirmation = false;
+                        }
+                    });
+            }
+            
+            if self.show_empty_trash_confirmation {
+                egui::Window::new("Confirm Empty trash")
+                    .collapsible(false)
+                    .show(ctx, |ui| {
+                        ui.label("Are you sure you want to delete all notes permanently?");
+                        if ui.button("Yes").clicked() {
+                            let _ = self.empty_trash();
+                            self.show_empty_trash_confirmation = false;
+                        }
+                        if ui.button("Cancel").clicked() {
+                            self.show_empty_trash_confirmation = false;
                         }
                     });
             }
