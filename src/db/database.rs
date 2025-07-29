@@ -414,7 +414,7 @@ impl Database {
     
     pub fn select_note_diff_ls(&mut self, note_id: i64) -> Result<Vec<NoteDiff>> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, version, changed_at 
+            "SELECT id, note_id, version, changed_at 
             FROM note_diff 
             WHERE note_id = ?1 
             ORDER BY version"
@@ -422,9 +422,10 @@ impl Database {
         let note_diff_iter = stmt.query_map(params![note_id], |row| {
             Ok(NoteDiff {
                 id: row.get(0)?,
-                version: row.get(1)?,
+                note_id: row.get(1)?,
+                version: row.get(2)?,
                 diff: String::new(), // dummy value for the list
-                changed_at: row.get(2)?,
+                changed_at: row.get(3)?,
             })
         })?;
         note_diff_iter.collect()
@@ -432,14 +433,15 @@ impl Database {
 
     pub fn select_note_diff(&mut self, id: i64) -> Result<NoteDiff> {
         self.conn.query_row(
-            "SELECT id, version, diff, changed_at FROM note_diff WHERE id = ?1",
+            "SELECT id, note_id, version, diff, changed_at FROM note_diff WHERE id = ?1",
             [&id],
             |row| {
                 Ok(NoteDiff {
                     id: row.get(0)?,
-                    version: row.get(1)?,
-                    diff: row.get(2)?,
-                    changed_at: row.get(3)?,
+                    note_id: row.get(1)?,
+                    version: row.get(2)?,
+                    diff: row.get(3)?,
+                    changed_at: row.get(4)?,
                 })
             },
         )

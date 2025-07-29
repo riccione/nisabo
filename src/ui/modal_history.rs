@@ -50,8 +50,14 @@ impl App {
                     //right
                     ui.vertical(|ui| {
                         if self.history_curr != NoteDiff::default() {
+                            let version = self.history_curr.version;
                             let diff = json_to_human(&self.history_curr.diff);
-                            ui.label(format!("Version: {}", self.history_curr.version));
+                            if ui.button("Restore").clicked() {
+                                println!("Restore for version {}, note id {} clicked", 
+                                         version,
+                                         self.history_curr.note_id);
+                            }
+                            ui.label(format!("Version: {}", version));
                             ui.label(format!("Changed at: {}", self.history_curr.changed_at));
                             ui.label(format!("Diff:\n{}", diff));
                         }
