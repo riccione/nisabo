@@ -2,7 +2,7 @@ use eframe::egui::{self};
 use crate::app::{App, LoadState};
 use crate::db::models::{NoteDiff};
 use crate::constants::RESULT_SUCCESS;
-use crate::diff::{json_to_human};
+use crate::diff::{json_to_human, backward_step};
 
 impl App {
     pub fn show_history(&mut self, ctx: &egui::Context) {
@@ -51,8 +51,13 @@ impl App {
                     ui.vertical(|ui| {
                         if self.history_curr != NoteDiff::default() {
                             let version = self.history_curr.version;
-                            let diff = json_to_human(&self.history_curr.diff);
+                            let raw_diff = &self.history_curr.diff;
+                            let diff = json_to_human(raw_diff);
                             if ui.button("Restore").clicked() {
+                                // restore works in a cycle, from current to n-1, n-2 and so on
+                                //
+                                let dd = backward_step(&self.original_content, raw_diff);
+                                println!("RESTORE: {}", dd);
                                 println!("Restore for version {}, note id {} clicked", 
                                          version,
                                          self.history_curr.note_id);
@@ -63,8 +68,6 @@ impl App {
                         }
                     });
                     }
-                    // inside the window
-                    // add a button - Restore
                 });
         });
         if !open {

@@ -77,6 +77,19 @@ pub fn json_to_human(j: &str) -> String {
     }
 }
 
+pub fn backward_step(s1: &str, diff_str: &str) -> String {
+    // TODO: fix type mismatch
+    let v: Vec<Diff> = match deserialize(diff_str.to_string()) {
+        Ok(x) => x,
+        Err(e) => {
+            eprintln!("Deserialization failed: {}", e);
+            Vec::new() // TODO: temp fix
+        }
+    };
+    
+    backward_diff(s1, &v)
+}
+
 /// s1 - current string
 /// v - diff
 /// restores changes from the closest Diff, 
